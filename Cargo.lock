@@ -102,12 +102,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dict"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39fbb71fba1e2c935f51b056de0d812d9b625b8165b2d7f8848902080fbdffb4"
-
-[[package]]
 name = "directories"
 version = "5.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -176,21 +170,20 @@ checksum = "d231dfb89cfffdbc30e7fc41579ed6066ad03abda9e567ccafae602b97ec5024"
 name = "hyprfloat"
 version = "0.1.0"
 dependencies = [
- "dict",
  "directories",
  "fork",
  "hyprland",
  "lazy_static",
- "log",
  "rand",
  "serde",
+ "simple-home-dir",
  "toml",
 ]
 
 [[package]]
 name = "hyprland"
-version = "0.4.0-alpha.2"
-source = "git+https://github.com/hyprland-community/hyprland-rs?branch=master#116305ab39c69b72e9f19162c4264dbec86be5dd"
+version = "0.4.0-alpha.3"
+source = "git+https://github.com/hyprland-community/hyprland-rs?branch=master#125a4e5a98aafb5c9b53655de03d72f6f35aa694"
 dependencies = [
  "ahash",
  "derive_more",
@@ -207,8 +200,8 @@ dependencies = [
 
 [[package]]
 name = "hyprland-macros"
-version = "0.4.0-alpha.2"
-source = "git+https://github.com/hyprland-community/hyprland-rs?branch=master#116305ab39c69b72e9f19162c4264dbec86be5dd"
+version = "0.4.0-alpha.3"
+source = "git+https://github.com/hyprland-community/hyprland-rs?branch=master#125a4e5a98aafb5c9b53655de03d72f6f35aa694"
 dependencies = [
  "quote",
  "syn",
@@ -251,12 +244,6 @@ dependencies = [
  "bitflags",
  "libc",
 ]
-
-[[package]]
-name = "log"
-version = "0.4.22"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24"
 
 [[package]]
 name = "memchr"
@@ -387,9 +374,9 @@ dependencies = [
 
 [[package]]
 name = "redox_users"
-version = "0.4.5"
+version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd283d9651eeda4b2a83a43c1c91b266c40fd76ecd39a50a8c630ae69dc72891"
+checksum = "ba009ff324d1fc1b900bd1fdb31564febe58a8ccc8a6fdbb93b543d33b13ca43"
 dependencies = [
  "getrandom",
  "libredox",
@@ -486,6 +473,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eb5b1b31579f3811bf615c144393417496f152e12ac8b7663bf664f4a815306d"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "simple-home-dir"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee786d36d89b647cb282c7253385e4c563f363b83e6cdc5c2737724980a8a6a6"
+dependencies = [
+ "windows-sys 0.52.0",
 ]
 
 [[package]]

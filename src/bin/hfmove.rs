@@ -1,6 +1,7 @@
 use std::env;
+use std::process::exit;
 use hyprfloat::{
-    config_data as conf,
+    CONFIG_DATA,
     client_data as cli,
     count_data as count,
 };
@@ -9,7 +10,7 @@ use hyprland::dispatch::{Dispatch, DispatchType};
 use hyprland::dispatch::WindowMove::Direction;
 use hyprland::dispatch::Direction::{Left, Up, Down, Right};
 use hyprland::dispatch::Position::{Exact};
-use std::process::exit;
+
 
 fn detect_dir(direction: &str, start_pos: i16,
               min_pos: i16,
@@ -26,6 +27,10 @@ fn detect_dir(direction: &str, start_pos: i16,
 }
 
 fn main() {
+    let loc_cli = cli();
+    let loc_count = count();
+
+
 
     let args: Vec<String> = env::args().collect();
     let bind = args[1].chars()
@@ -36,21 +41,21 @@ fn main() {
 
     let dispatcher :DispatchType;
 
-    if cli().floating == true && conf().detect_borders == true {
+    if loc_cli.floating == true && CONFIG_DATA.detect_padding == true {
         let window_pos_x = detect_dir(
             arg,
-            cli().window_pos.x,
-            conf().margins.left,
-            count().max_pos.x,
+            loc_cli.window_pos.x,
+            loc_cli.screen_min.x + CONFIG_DATA.padding.left,
+            loc_count.max_pos.x,
             "l",
             "r"
         );
 
         let window_pos_y = detect_dir(
             arg,
-            cli().window_pos.y,
-            conf().margins.top,
-            count().max_pos.y,
+            loc_cli.window_pos.y,
+            loc_cli.screen_min.y + CONFIG_DATA.padding.top,
+            loc_count.max_pos.y,
             "u",
             "d"
         );
