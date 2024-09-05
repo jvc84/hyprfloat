@@ -2,7 +2,7 @@
 [monitors]
 
     [monitors.main]
-    # margins = [left, top, bottom, right]
+    # padding = [left, top, bottom, right]
     padding = [20,20,20,20]
     #size = [width, height]
     size = [900,700]
@@ -18,9 +18,9 @@
     # margins = [30,30,30,30]
     # size = [700,600]
 
-    # detect_borders = true
+    # detect_padding = true
     # classic_resize = false
-    # stick_to_borders  = true
+    # stick_to_borders = true
     # invert_keys_in_stick_mode = true
     # resize_through_borders = false
 
