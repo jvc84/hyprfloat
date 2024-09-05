@@ -6,4 +6,6 @@ Supports Hyprland `>=42.0`
 
 **Usage**
 
-![plot](assets/demo.mp4) 
+
+https://github.com/user-attachments/assets/be01114c-2942-4db9-9997-25367f36bcdc
+
