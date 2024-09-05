@@ -6,4 +6,3 @@ Supports Hyprland `>=42.0`
 
 **Usage**
 
-![plot](assets/demo.mp4) 
