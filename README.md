@@ -6,4 +6,4 @@ Supports Hyprland `>=42.0`
 
 **Usage**
 
-[![Watch the video](https://i.sstatic.net/Vp2cE.png)](https://github.com/assets/demo.mp4)
+https://github.com/jvc84/hyprfloat/blob/main/assets/demo.mp4
