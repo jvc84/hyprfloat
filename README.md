@@ -37,11 +37,12 @@ hftogglefloat [ARGS]
 
 ARGS:
    -p | --position  POSITION  moves window to POSITION
-    POSITION:
-      cursor               moves window to cursor
-      opposite             moves window to mirror cursor position
-      corner               moves window to the farthest corner from cursor 
-      center               moves window to center
+       POSITION:
+         cursor      moves window to cursor
+         opposite    moves window to mirror cursor position
+         corner      moves window to the farthest corner from cursor 
+         center      moves window to center
+
   -w | --width WIDTH       resizes window width to WIDTH
   -h | --height HEIGHT     resizes window hegight to HEIGHT
   -r | --resize            resizes window to 'size' parameter in config
