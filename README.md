@@ -42,6 +42,7 @@ ARGS:
          opposite    moves window to mirror cursor position
          corner      moves window to the farthest corner from cursor 
          center      moves window to center
+         random      moves window to random position on screen
 
   -w | --width WIDTH       resizes window width to WIDTH
   -h | --height HEIGHT     resizes window hegight to HEIGHT
