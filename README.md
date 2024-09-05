@@ -20,6 +20,7 @@ bash install.sh
 
 ```
 hfresize x y
+
 x - resize by x axis
 y - resize by y axis
 ```
@@ -28,6 +29,7 @@ y - resize by y axis
 ```
 hfopen [ARGS] APPLICATION
 hftogglefloat [ARGS]
+
 ARGS:
    -p | --position  POSITION  moves window to cursor
     POSITION:
@@ -44,6 +46,7 @@ ARGS:
 
 ```
 hfmove DIRECTION
+
 DIRECTION:
   l | left
   r | right
