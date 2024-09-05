@@ -26,6 +26,7 @@ fn check_invert(window_pos : i16, window_size: i16, screen_const: i16, margin_mi
     }
 }
 
+
 fn stick_window(window_pos : i16, window_size: i16, i_margin_min: i16, i_margin_max:i16, resize: i16, screen_min: i16, screen_max: i16) -> i16 {
 
     let border_pos_min = window_pos;
