@@ -43,7 +43,7 @@ ARGS:
       corner               moves window to the farthest corner from cursor 
       center               moves window to center
   -w | --width WIDTH       resizes window width to WIDTH
-  -h |  --height HEIGHT    resizes window hegight to HEIGHT
+  -h | --height HEIGHT     resizes window hegight to HEIGHT
   -r | --resize            resizes window to 'size' parameter in config
   -t | --tiled             makes window tiled if it is floating
 ```
