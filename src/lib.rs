@@ -351,10 +351,7 @@ pub fn define_args(param: &str) {
         let _  = Command::new("hyprctl")
             .arg("dispatch")
             .arg("exec")
-            .arg("[move ")
-            .arg(client_data().cursor_pos.x.to_string().as_str())
-            .arg(client_data().cursor_pos.y.to_string().as_str())
-            .arg(    "]")
+            .arg("[float]")
             .arg(args[args.len() - 1].as_str())
             .spawn();
     }
