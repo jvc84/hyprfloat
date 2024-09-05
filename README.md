@@ -6,4 +6,4 @@ Supports Hyprland `>=42.0`
 
 **Usage**
 
-https://github.com/jvc84/hyprfloat/assets/demo.mp4
+![plot](.assets/demo.mp4) 
