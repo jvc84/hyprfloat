@@ -18,6 +18,8 @@ sudo
 
 **Installation**
 ```
+git clone https://github.com/jvc84/hyprfloat
+cd hyprfloat
 bash install.sh
 ```
 
