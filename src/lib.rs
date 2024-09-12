@@ -81,7 +81,7 @@ pub struct Config {
 
 
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct Count {
     pub max_pos: Descartes,
     pub window_center: Descartes,
@@ -176,13 +176,13 @@ pub fn config_data() -> Config {
             string =  toml::to_string(&table[&section]).unwrap();
         },
          None => {
-             match table.get("default".to_string()){
+             match table.get("any".to_string()){
                  Some(x) => {
-                     string = toml::to_string(&table[&"default".to_string()]).unwrap()
+                     string = toml::to_string(&table[&"any".to_string()]).unwrap()
                  },
 
                  None => {
-                     notify_error("Config Error: no section \"default\"");
+                     notify_error("Config Error: no section \"any\"");
                      exit(0x0100)
                  }
              }
@@ -315,7 +315,7 @@ lazy_static! {
 pub fn define_args(param: &str) {
 
     /////// Arguments ///////
-    let mut dispatcher_var: &str = &"default";
+    let mut dispatcher_var: &str = &"any";
     let mut  do_float: bool = false;
     let mut toggle_float: bool = false;
     let mut resize: bool = false;
@@ -351,14 +351,10 @@ pub fn define_args(param: &str) {
         let _  = Command::new("hyprctl")
             .arg("dispatch")
             .arg("exec")
-            .arg("[move ")
-            .arg(client_data().cursor_pos.x.to_string().as_str())
-            .arg(client_data().cursor_pos.y.to_string().as_str())
-            .arg(    "]")
+            .arg("[float] ")
             .arg(args[args.len() - 1].as_str())
             .spawn();
     }
-
 
 
     /////// Cycle ///////
@@ -414,6 +410,8 @@ pub fn dispatch_client(resize: bool, do_float: bool, toggle_float: bool, width: 
 
             let value = format!("{}{}", "monitor_", monitor_id);
 
+
+
             if class_section
                 .as_table()
                 .unwrap()
@@ -426,7 +424,21 @@ pub fn dispatch_client(resize: bool, do_float: bool, toggle_float: bool, width: 
                 let new_height = param_vec[1].as_integer().unwrap() as i16;
 
                 let _ = Dispatch::call(ResizeActive(Exact(new_width, new_height)));
+
+            } else if  class_section
+                .as_table()
+                .unwrap()
+                .keys()
+                .collect::<Vec<_>>()
+                .contains(&&"monitor_any".to_string()) {
+                let param_vec = &class_section.as_table().unwrap()[&"monitor_any".to_string()];
+
+                let new_width = param_vec[0].as_integer().unwrap() as i16;
+                let new_height = param_vec[1].as_integer().unwrap() as i16;
+
+                let _ = Dispatch::call(ResizeActive(Exact(new_width, new_height)));
             }
+
         }
     }
 

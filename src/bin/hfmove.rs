@@ -4,13 +4,17 @@ use hyprfloat::{
     CONFIG_DATA,
     client_data as cli,
     count_data as count,
+    move_window,
+    FromClient,
+    Count
 };
 
 use hyprland::dispatch::{Dispatch, DispatchType};
 use hyprland::dispatch::WindowMove::Direction;
 use hyprland::dispatch::Direction::{Left, Up, Down, Right};
+use hyprland::dispatch::DispatchType::MoveActive;
 use hyprland::dispatch::Position::{Exact};
-
+use lazy_static::lazy_static;
 
 fn detect_dir(direction: &str, start_pos: i16,
               min_pos: i16,
@@ -26,41 +30,36 @@ fn detect_dir(direction: &str, start_pos: i16,
     }
 }
 
-fn main() {
-    let loc_cli = cli();
-    let loc_count = count();
+lazy_static!(
+    static ref LOC_CLI: FromClient = cli();
+    static ref LOC_COUNT: Count = count();
+);
 
 
-
-    let args: Vec<String> = env::args().collect();
-    let bind = args[1].chars()
-        .collect::<Vec<_>>()[0]
-        .to_lowercase()
-        .to_string();
-    let arg = bind.as_str();
+fn move_dispatcher(arg: &str) {
 
     let dispatcher :DispatchType;
 
-    if loc_cli.floating == true && CONFIG_DATA.detect_padding == true {
+    if LOC_CLI.floating == true && CONFIG_DATA.detect_padding == true {
         let window_pos_x = detect_dir(
             arg,
-            loc_cli.window_pos.x,
-            loc_cli.screen_min.x + CONFIG_DATA.padding.left,
-            loc_count.max_pos.x,
+            LOC_CLI.window_pos.x,
+            LOC_CLI.screen_min.x + CONFIG_DATA.padding.left,
+            LOC_COUNT.max_pos.x,
             "l",
             "r"
         );
 
         let window_pos_y = detect_dir(
             arg,
-            loc_cli.window_pos.y,
-            loc_cli.screen_min.y + CONFIG_DATA.padding.top,
-            loc_count.max_pos.y,
+            LOC_CLI.window_pos.y,
+            LOC_CLI.screen_min.y + CONFIG_DATA.padding.top,
+            LOC_COUNT.max_pos.y,
             "u",
             "d"
         );
 
-        dispatcher = DispatchType::MoveActive(Exact(window_pos_x, window_pos_y));
+        dispatcher = MoveActive(Exact(window_pos_x, window_pos_y));
 
     } else {
         let direction: hyprland::dispatch::Direction = match arg {
@@ -68,11 +67,34 @@ fn main() {
             "u" => Up,
             "d" => Down,
             "r" => Right,
-             _  => exit(123),
+            _  => exit(123),
         };
 
         dispatcher  = DispatchType::MoveWindow(Direction(direction));
 
     }
     let _ = Dispatch::call(dispatcher);
+}
+
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+
+    match args[1].as_str() {
+        "-p" | "--position" => {
+            let dispatcher =  move_window(args[2].as_str(), LOC_CLI.clone(), LOC_COUNT.clone());
+            let _ = Dispatch::call(dispatcher);
+
+        },
+        _ => {
+            let bind = args[1].chars()
+                .collect::<Vec<_>>()[0]
+                .to_lowercase()
+                .to_string();
+            let arg = bind.as_str();
+            
+            move_dispatcher(arg)
+                
+        }
+    }
 }

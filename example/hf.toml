@@ -1,10 +1,10 @@
 
 [monitors]
 
-    [monitors.main]
-    # margins = [left, top, bottom, right]
+    [monitors.any]
+    ## margins = [left, top, bottom, right]
     padding = [20,20,20,20]
-    #size = [width, height]
+    ## size = [width, height]
     size = [900,700]
 
     detect_borders = true
@@ -27,6 +27,12 @@
 
 [windows]
 
+    ## [windows.window_class]
     # [windows.kitty]
+    ## monitor_x = [window_size_x, window_size_y]
     # monitor_0 = [600, 500]
     # monitor_1 = [700, 600]
+
+    # [windows.firefox]
+    # monitor_any = [750, 650]
+
