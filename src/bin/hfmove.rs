@@ -4,7 +4,7 @@ use hyprfloat::{
     CONFIG_DATA,
     client_data as cli,
     count_data as count,
-    move_window,
+    window_position,
     FromClient,
     Count
 };
@@ -15,6 +15,13 @@ use hyprland::dispatch::Direction::{Left, Up, Down, Right};
 use hyprland::dispatch::DispatchType::MoveActive;
 use hyprland::dispatch::Position::{Exact};
 use lazy_static::lazy_static;
+
+
+lazy_static!(
+    static ref LOC_CLI: FromClient = cli();
+    static ref LOC_COUNT: Count = count();
+);
+
 
 fn detect_dir(direction: &str, start_pos: i16,
               min_pos: i16,
@@ -30,13 +37,8 @@ fn detect_dir(direction: &str, start_pos: i16,
     }
 }
 
-lazy_static!(
-    static ref LOC_CLI: FromClient = cli();
-    static ref LOC_COUNT: Count = count();
-);
 
-
-fn move_dispatcher(arg: &str) {
+fn move_window(arg: &str) {
 
     let dispatcher :DispatchType;
 
@@ -73,6 +75,7 @@ fn move_dispatcher(arg: &str) {
         dispatcher  = DispatchType::MoveWindow(Direction(direction));
 
     }
+
     let _ = Dispatch::call(dispatcher);
 }
 
@@ -82,19 +85,19 @@ fn main() {
 
     match args[1].as_str() {
         "-p" | "--position" => {
-            let dispatcher =  move_window(args[2].as_str(), LOC_CLI.clone(), LOC_COUNT.clone());
+            let dispatcher =  window_position(args[2].as_str(), LOC_CLI.clone(), LOC_COUNT.clone());
             let _ = Dispatch::call(dispatcher);
 
         },
+
         _ => {
             let bind = args[1].chars()
                 .collect::<Vec<_>>()[0]
                 .to_lowercase()
                 .to_string();
             let arg = bind.as_str();
-            
-            move_dispatcher(arg)
-                
+
+            move_window(arg);
         }
     }
 }

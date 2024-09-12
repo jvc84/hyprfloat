@@ -38,7 +38,6 @@ use lazy_static::lazy_static;
 use simple_home_dir::*;
 
 
-
 #[derive(Deserialize, Clone)]
 pub struct Descartes {
     pub x: i16,
@@ -60,6 +59,7 @@ pub struct FromClient {
     pub fullscreen: bool,
 }
 
+
 #[derive(Deserialize, Clone)]
 pub struct Margins {
     pub left:   i16,
@@ -67,6 +67,7 @@ pub struct Margins {
     pub bottom: i16,
     pub right:  i16,
 }
+
 
 #[derive(Deserialize, Clone)]
 pub struct Config {
@@ -80,7 +81,6 @@ pub struct Config {
 }
 
 
-
 #[derive(Deserialize, Clone)]
 pub struct Count {
     pub max_pos: Descartes,
@@ -88,9 +88,9 @@ pub struct Count {
 }
 
 
-
-
 lazy_static! {
+    static ref args: Vec<String> = env::args().collect();
+
     static ref HOME: PathBuf = home_dir().unwrap();
     static ref CONFIG_PATH: String = "/.config/hypr/hf.toml".to_string();
     static ref CONFIG_FILE: String = format!("{}{}", HOME.to_str().unwrap(), CONFIG_PATH.as_str());
@@ -308,73 +308,76 @@ pub fn client_data() -> FromClient {
 }
 
 
-lazy_static! {
-    static ref args:  Vec<String> = env::args().collect();
+fn move_corner(pos: i16, max_pos: i16, win_size: i16) -> i16{
+    if pos >= max_pos / 2
+    { 0 }
+    else
+    { max_pos - win_size }
 }
 
-pub fn define_args(param: &str) {
 
-    /////// Arguments ///////
-    let mut dispatcher_var: &str = &"any";
-    let mut  do_float: bool = false;
-    let mut toggle_float: bool = false;
-    let mut resize: bool = false;
-    let mut width: i16  = crate::CONFIG_DATA.size.x;
-    let mut height: i16 = crate::CONFIG_DATA.size.y;
-    let mut tiled: bool = false;
+pub fn detect_padding(window_pos: i16, min_pos: i16, max_pos: i16) -> i16 {
+    let mut output = window_pos;
 
-
-    for (i, arg) in args[1..args.len()].iter().enumerate() {
-        match arg.as_str() {
-            "--position" | "-p" => dispatcher_var = args[i + 2].as_str(),
-            "--resize"   | "-r" => resize = true,
-            "--tiled"    | "-t" => tiled = true,
-            "--width"    | "-w" => width =  args[i + 2].parse::<i16>().unwrap(),
-            "--height"   | "-h" => height = args[i + 2].parse::<i16>().unwrap(),
-            _ => continue,
+    if CONFIG_DATA.detect_padding == true {
+        if window_pos <= min_pos {
+            output = min_pos
+        } else if window_pos >= max_pos {
+            output = max_pos
         }
     }
 
+    output
+}
 
-    /////// Command ///////
-    let start_addr = Client::get_active()
-        .unwrap()
-        .unwrap_or(
-            empty_client()
-        ).address;
 
-    if param == "togglefloating" {
-        toggle_float = true;
-    } else if param == "open" {
-        do_float = true;
+pub fn window_position(param: &str, loc_cli: FromClient, loc_count: Count) ->  DispatchType<'static> {
 
-        let _  = Command::new("hyprctl")
-            .arg("dispatch")
-            .arg("exec")
-            .arg("[float] ")
-            .arg(args[args.len() - 1].as_str())
-            .spawn();
+    let window_pos_x: i16;
+    let window_pos_y: i16;
+
+    let mut def_pos_x: i16 = loc_cli.window_pos.x;
+    let mut def_pos_y: i16 = loc_cli.window_pos.y;
+
+
+
+    if param == "cursor" {
+        def_pos_x = loc_count.window_center.x;
+        def_pos_y = loc_count.window_center.y;
+
+    } else if param == "random" {
+        let mut rng = rand::thread_rng();
+
+        def_pos_x = rng.gen_range(1..=(loc_cli.screen_max.x - loc_cli.window_size.x));
+        def_pos_y = rng.gen_range(1..=(loc_cli.screen_max.y - loc_cli.window_size.y));
+
+    } else if param == "opposite" {
+        def_pos_x = loc_cli.screen_max.x - loc_cli.cursor_pos.x - loc_cli.window_size.x / 2;
+        def_pos_y = loc_cli.screen_max.y - loc_cli.cursor_pos.y - loc_cli.window_size.y / 2;
+
+    } else if param == "corner" {
+        def_pos_x = move_corner(loc_cli.cursor_pos.x, loc_cli.screen_max.x, loc_cli.window_size.x);
+        def_pos_y = move_corner(loc_cli.cursor_pos.y, loc_cli.screen_max.y, loc_cli.window_size.y);
+
+
+    } else if param != "default" {
+        exit(0x0100)
     }
 
 
-    /////// Cycle ///////
-    for _i in 0 ..= 200 {
+    window_pos_x = detect_padding(
+        def_pos_x,
+        loc_cli.screen_min.x + CONFIG_DATA.padding.left,
+        loc_count.max_pos.x
+    );
 
-        let mid_addr = Client::get_active()
-            .unwrap()
-            .unwrap_or(
-                empty_client()
-            ).address;
+    window_pos_y = detect_padding(
+        def_pos_y,
+        loc_cli.screen_min.y + CONFIG_DATA.padding.top,
+        loc_count.max_pos.y,
+    );
 
-        if (mid_addr != start_addr && do_float == true)
-             || (mid_addr == start_addr && toggle_float == true) {
-
-            dispatch_client(resize, do_float, toggle_float, width, height, dispatcher_var, tiled);
-            break
-        }
-
-        sleep(time::Duration::from_millis(50));
-    }
+    DispatchType::MoveActive(Exact(window_pos_x, window_pos_y))
 }
 
 
@@ -445,79 +448,72 @@ pub fn dispatch_client(resize: bool, do_float: bool, toggle_float: bool, width: 
     let loc_cli = client_data();
     let loc_count = count_data();
 
-    let cord = move_window(dispatcher_var,  loc_cli.clone(), loc_count);
+    let cord = window_position(dispatcher_var, loc_cli.clone(), loc_count);
     let _ = Dispatch::call(cord);
 }
 
 
-fn move_corner(pos: i16, max_pos: i16, win_size: i16) -> i16{
-    if pos >= max_pos / 2
-    { 0 }
-    else
-    { max_pos - win_size }
-}
+pub fn define_args(param: &str) {
+
+    /////// Arguments ///////
+    let mut dispatcher_var: &str = &"any";
+    let mut  do_float: bool = false;
+    let mut toggle_float: bool = false;
+    let mut resize: bool = false;
+    let mut width: i16  = crate::CONFIG_DATA.size.x;
+    let mut height: i16 = crate::CONFIG_DATA.size.y;
+    let mut tiled: bool = false;
 
 
-pub fn detect_padding(window_pos: i16, min_pos: i16, max_pos: i16) -> i16 {
-    let mut output = window_pos;
-
-    if CONFIG_DATA.detect_padding == true {
-        if window_pos <= min_pos {
-            output = min_pos
-        } else if window_pos >= max_pos {
-            output = max_pos
+    for (i, arg) in args[1..args.len()].iter().enumerate() {
+        match arg.as_str() {
+            "--position" | "-p" => dispatcher_var = args[i + 2].as_str(),
+            "--resize"   | "-r" => resize = true,
+            "--tiled"    | "-t" => tiled = true,
+            "--width"    | "-w" => width =  args[i + 2].parse::<i16>().unwrap(),
+            "--height"   | "-h" => height = args[i + 2].parse::<i16>().unwrap(),
+            _ => continue,
         }
     }
 
-    output
-}
 
+    /////// Command ///////
+    let start_addr = Client::get_active()
+        .unwrap()
+        .unwrap_or(
+            empty_client()
+        ).address;
 
-pub fn move_window(param: &str, loc_cli: FromClient, loc_count: Count) ->  DispatchType<'static> {
+    if param == "togglefloating" {
+        toggle_float = true;
+    } else if param == "open" {
+        do_float = true;
 
-    let window_pos_x: i16;
-    let window_pos_y: i16;
-
-    let mut def_pos_x: i16 = loc_cli.window_pos.x;
-    let mut def_pos_y: i16 = loc_cli.window_pos.y;
-
-
-
-    if param == "cursor" {
-        def_pos_x = loc_count.window_center.x;
-        def_pos_y = loc_count.window_center.y;
-
-    } else if param == "random" {
-        let mut rng = rand::thread_rng();
-
-        def_pos_x = rng.gen_range(1..=(loc_cli.screen_max.x - loc_cli.window_size.x));
-        def_pos_y = rng.gen_range(1..=(loc_cli.screen_max.y - loc_cli.window_size.y));
-
-    } else if param == "opposite" {
-        def_pos_x = loc_cli.screen_max.x - loc_cli.cursor_pos.x - loc_cli.window_size.x / 2;
-        def_pos_y = loc_cli.screen_max.y - loc_cli.cursor_pos.y - loc_cli.window_size.y / 2;
-
-    } else if param == "corner" {
-        def_pos_x = move_corner(loc_cli.cursor_pos.x, loc_cli.screen_max.x, loc_cli.window_size.x);
-        def_pos_y = move_corner(loc_cli.cursor_pos.y, loc_cli.screen_max.y, loc_cli.window_size.y);
-
-
-    } else if param != "default" {
-        exit(0x0100)
+        let _  = Command::new("hyprctl")
+            .arg("dispatch")
+            .arg("exec")
+            .arg("[float] ")
+            .arg(args[args.len() - 1].as_str())
+            .spawn();
     }
 
 
-    window_pos_x = detect_padding(
-        def_pos_x,
-        loc_cli.screen_min.x + CONFIG_DATA.padding.left,
-        loc_count.max_pos.x
-    );
+    /////// Cycle ///////
+    for _i in 0 ..= 200 {
 
-    window_pos_y = detect_padding(
-        def_pos_y,
-        loc_cli.screen_min.y + CONFIG_DATA.padding.top,
-        loc_count.max_pos.y,
-    );
+        let mid_addr = Client::get_active()
+            .unwrap()
+            .unwrap_or(
+                empty_client()
+            ).address;
 
-    DispatchType::MoveActive(Exact(window_pos_x, window_pos_y))
+        if (mid_addr != start_addr && do_float == true)
+             || (mid_addr == start_addr && toggle_float == true) {
+
+            dispatch_client(resize, do_float, toggle_float, width, height, dispatcher_var, tiled);
+            break
+        }
+
+        sleep(time::Duration::from_millis(50));
+    }
 }
