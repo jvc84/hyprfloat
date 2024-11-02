@@ -395,7 +395,13 @@ pub fn main_help(purpose: &str) {
     \n\n    --help                                - show this message\
     \n    -c PATH | --config PATH               - define PATH for config\
     \n\n    -p PARAMETER | --position PARAMETER   - move/open window accordig to PARAMETER\
-    \n        PARAMETERS: cursor, center, close, far, opposite, random\
+    \n        PARAMETERS:\
+    \n            cursor      - move/open window at the cursor position\
+    \n            center      - move/open window at the center\
+    \n            close       - move/open window at the closest corner from cursor\
+    \n            far         - move/open window at the farthest corner from cursor\
+    \n            opposite    - move/open window at the mirror of cursor position\
+    \n            random      - move/open window at the random position on screen\
     \n{}    \
     \n    -r | --resize                         - resize window according to config parameter `default_size`\
     \n    -w SIZE | --width  SIZE               - set window width to SIZE\

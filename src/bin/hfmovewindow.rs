@@ -65,7 +65,13 @@ fn movewindow_help() {
     \n\n    --help                                - show this message\
     \n    -c PATH | --config PATH               - define PATH for config\
     \n    -p PARAMETER | --position PARAMETER   - move/open window according to PARAMETER\
-    \n        PARAMETERS: cursor, center, close, far, opposite, random\
+    \n        PARAMETERS:\
+    \n            cursor      - move/open window at the cursor position\
+    \n            center      - move/open window at the center\
+    \n            close       - move/open window at the closest corner from cursor\
+    \n            far         - move/open window at the farthest corner from cursor\
+    \n            opposite    - move/open window at the mirror of cursor position\
+    \n            random      - move/open window at the random position on screen\
     \n\nDIRECTIONS:\
     \n\n    l        - move window left according to config parameters\
     \n    r        - move window right according to config parameters\
