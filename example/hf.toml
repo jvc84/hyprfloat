@@ -10,7 +10,7 @@
     margin = [8,8]
     
     detect_padding = true
-    classic_resize = false
+    standard_resize = false
     stick_to_borders = true
     invert_keys_in_stick_mode = true
     resize_through_borders = false
@@ -22,7 +22,7 @@
     # margin = [2,2]
 
     # detect_padding = true 
-    # classic_resize = false 
+    # standard_resize = false 
     # stick_to_borders = true 
     # invert_keys_in_stick_mode = true
     # resize_through_borders = false 
@@ -39,7 +39,6 @@
     #monitor_any = [500,500]
     #monitor_0 = [600, 500]
     #monitor_1 = [700, 600]
-
 
     [windows.firefox]
     minimal_size = [450,120]

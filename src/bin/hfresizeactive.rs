@@ -111,11 +111,11 @@ fn count_move_resize(axis: &str, global_resize: i16) -> (i16, i16) {
 
     if -resize > window_size {
         window_size = minimal_size;
-        if conf.classic_resize == false {
+        if conf.standard_resize == false {
             window_pos = window_start_pos + window_start_size / 2 - minimal_size / 2;
         }
     } else {
-        if CONFIG_DATA.read().unwrap().classic_resize == false {
+        if CONFIG_DATA.read().unwrap().standard_resize == false {
             window_pos = window_pos - resize / 2;
             window_size = window_size + resize
         } else {
@@ -243,7 +243,7 @@ fn main() {
 
         for i in 1..=2 {
             let mut arg: i16 = args[i].parse::<i16>().unwrap();
-            if arg % 2 != 0 && CONFIG_DATA.read().unwrap().classic_resize == false && CLIENT_DATA.read().unwrap().floating == true {
+            if arg % 2 != 0 && CONFIG_DATA.read().unwrap().standard_resize == false && CLIENT_DATA.read().unwrap().floating == true {
                 arg = arg + 1;
             }
             int_args.push(arg);

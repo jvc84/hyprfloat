@@ -55,7 +55,7 @@ pub struct ClientAxisData {
 pub struct Config {
     pub axis_data:  HashMap<String, ConfigAxisData>,
     pub detect_padding: bool,
-    pub classic_resize: bool,
+    pub standard_resize: bool,
     pub stick_to_borders: bool,
     pub invert_keys_in_stick_mode: bool,
     pub resize_through_borders: bool,
@@ -77,7 +77,7 @@ pub struct PreConfig {
     pub default_size: (u32, u32),
     pub margin: (u32, u32),
     pub detect_padding: bool,
-    pub classic_resize: bool,
+    pub standard_resize: bool,
     pub stick_to_borders: bool,
     pub invert_keys_in_stick_mode: bool,
     pub resize_through_borders: bool,
@@ -258,7 +258,7 @@ pub fn config_data(config_path: String) -> Config {
     let config = Config {
         axis_data: axis_map,
         detect_padding: pre_config.detect_padding,
-        classic_resize: pre_config.classic_resize,
+        standard_resize: pre_config.standard_resize,
         stick_to_borders: pre_config.stick_to_borders,
         invert_keys_in_stick_mode: pre_config.invert_keys_in_stick_mode,
         resize_through_borders: pre_config.resize_through_borders,
