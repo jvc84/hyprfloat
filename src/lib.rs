@@ -394,8 +394,8 @@ pub fn main_help(purpose: &str) {
     \n\nARGUMENTS:\
     \n\n    --help                                - show this message\
     \n    -c PATH | --config PATH               - define PATH for config\
-    \n\n    -p PARAMETER | --position PARAMETER   - move/open window accordig to PARAMETER\n        \
-    PARAMETERS: cursor, center, close, far, opposite\
+    \n\n    -p PARAMETER | --position PARAMETER   - move/open window accordig to PARAMETER\
+    \n        PARAMETERS: cursor, center, close, far, opposite, random\
     \n{}    \
     \n    -r | --resize                         - resize window according to config parameter `default_size`\
     \n    -w SIZE | --width  SIZE               - set window width to SIZE\
