@@ -1,121 +1,75 @@
-use std::path::PathBuf;
-use std::thread::sleep;
-use std::string::ToString;
-use std::boxed::Box;
-use std::{
-    env,
-    fs,
-    time
-};
-use std::process::{
-    Command,
-    exit
-};
-
-use hyprland::prelude::*;
-use hyprland::dispatch::Position::Exact;
-use hyprland::shared::Address;
-use hyprland::ctl::notify::Icon;
-use hyprland::dispatch::DispatchType::{
-    ResizeActive,
-    ToggleFloating
-};
-use hyprland::dispatch::{
-    Dispatch,
-    DispatchType
-};
-use hyprland::data::{
-    Client,
-    Monitor,
-    WorkspaceBasic,
-    CursorPosition
-};
-
 use toml;
-use serde::Deserialize;
 use rand::Rng;
+use serde::Deserialize;
 use lazy_static::lazy_static;
-use simple_home_dir::*;
+use std::{
+    sync::{Arc, RwLock},
+    collections::HashMap,
+    process::exit,
+    thread::sleep,
+    string::ToString,
+    env,
+    time,
+};
+use hyprland::{
+    data::Client,
+    prelude::*,
+    dispatch::Position::Exact,
+    ctl::notify::Icon,
+    dispatch::{
+        Dispatch,
+        DispatchType,
+        DispatchType::{
+            Exec, 
+            ResizeActive, 
+            ToggleFloating
+        },
+    },
+};
+
+pub mod data;
+pub use data::*;
 
 
 #[derive(Deserialize, Clone)]
-pub struct Descartes {
-    pub x: i16,
-    pub y: i16,
+pub struct Parameters {
+    pub make_float: bool,
+    pub toggle_float: bool,
+    pub resize: bool,
+    pub resize_x: bool,
+    pub resize_y: bool,
+    pub tiled: bool,
+    pub origin_size: bool,
+    pub count_system: String,
+    pub dispatcher_var: String,
 }
 
-
-#[derive(Deserialize, Clone)]
-pub struct FromClient {
-    pub window_pos:  Descartes,
-    pub window_size: Descartes,
-    pub screen_min: Descartes,
-    pub screen_max: Descartes,
-    pub cursor_pos:  Descartes,
-    pub address: Address,
-    pub class: String,
-    pub monitor: String,
-    pub floating: bool,
-    pub fullscreen: bool,
-}
-
-
-#[derive(Deserialize, Clone)]
-pub struct Margins {
-    pub left:   i16,
-    pub top:    i16,
-    pub bottom: i16,
-    pub right:  i16,
-}
-
-
-#[derive(Deserialize, Clone)]
-pub struct Config {
-    pub padding: Margins,
-    pub size: Descartes,
-    pub detect_padding: bool,
-    pub classic_resize: bool,
-    pub stick_to_borders: bool,
-    pub invert_keys_in_stick_mode: bool,
-    pub resize_through_borders: bool,
-}
-
-
-#[derive(Deserialize, Clone)]
-pub struct Count {
-    pub max_pos: Descartes,
-    pub window_center: Descartes,
-}
-
-
-lazy_static! {
-    static ref args: Vec<String> = env::args().collect();
-
-    static ref HOME: PathBuf = home_dir().unwrap();
-    static ref CONFIG_PATH: String = "/.config/hypr/hf.toml".to_string();
-    static ref CONFIG_FILE: String = format!("{}{}", HOME.to_str().unwrap(), CONFIG_PATH.as_str());
-
-    static ref CONFIG_RAW_DATA: String = check_config_file(CONFIG_FILE.as_str());
-    pub static ref CONFIG_DATA: Config = config_data();
-}
-
-
-
-fn check_config_file(arg: &str ) -> String {
-
-    match fs::read_to_string(arg).is_ok() {
-        true =>  fs::read_to_string(arg).unwrap(),
-        false => {
-            notify_error(
-                format!("No Config in {}", arg).as_str()
-            );
-            exit(0x0100)
-        }
+pub fn get_variables() -> Parameters {
+    Parameters {
+        make_float: false,
+        toggle_float: false,
+        resize: false,
+        resize_x: false,
+        resize_y: false,
+        tiled: false,
+        origin_size: false,
+        count_system: "origin".to_string(),
+        dispatcher_var: "any".to_string(),
     }
 }
 
 
-fn notify_error(message: &str )  {
+lazy_static! {
+    static ref ARGS: Vec<String> = env::args().collect();
+    pub static ref PARAMETERS: Arc<RwLock<Parameters>> = {
+       Arc::new(RwLock::new(get_variables()))
+    };
+    pub static ref SIZE_PARAMETERS: Arc<RwLock<HashMap<String, i16>>> = Arc::new(RwLock::new(HashMap::new()));
+    pub static ref POSITION_PARAMETERS: Arc<RwLock<HashMap<String, i16>>> = Arc::new(RwLock::new(HashMap::new()));
+}
+
+
+pub fn notify_error(message: &str )  {
     let _ = hyprland::ctl::notify::call(
         Icon::Error,
         time::Duration::from_secs(10),
@@ -125,395 +79,421 @@ fn notify_error(message: &str )  {
     );
 }
 
-
-fn check_config_content(string: String) -> Result<Config, toml::de::Error> {
-    let result: Result<Config, _>  = toml::from_str(&string);
-
+fn get_parameter(axis: &str, arg: Arc<RwLock<HashMap<String, i16>>>, default_value: i16) -> i16 {
+    let binding = arg.read().unwrap();
+    let result = binding.get(axis).clone();
     match result.clone() {
-        Ok(x) => result,
-        Err(e) => Err(e)
-    }
-}
-
-
-fn get_table(section: &str) -> toml::value::Value{
-
-    let mut full_table: toml::Table;
-    match  toml::from_str::<toml::Table>(&CONFIG_RAW_DATA).is_ok() {
-        true => {
-            full_table = toml::from_str(&CONFIG_RAW_DATA).unwrap()
-        }
-        false => {
-            notify_error("Config Error: Wrong parameter value");
-            exit(0x0100)
-        }
-    }
-
-    let table: toml::Value;
-    match full_table.get(section){
-        Some(x) =>  table = full_table[section].clone(),
+        Some(_) => {
+            *result.unwrap()
+        },
         None => {
-            notify_error(
-                format!("Config Error: No section \"{}\" in {}", section, CONFIG_FILE.as_str() ).as_str()
-            );
-            exit(0x0100)
-
+            default_value
         }
-    };
-
-    table
-}
-
-pub fn config_data() -> Config {
-
-    let table = get_table("monitors");
-
-    let mut string: String = "empty".to_string();
-    let section = Monitor::get_active().unwrap().id.to_string();
-
-    match table.get(section.clone()) {
-        Some(x) => {
-            string =  toml::to_string(&table[&section]).unwrap();
-        },
-         None => {
-             match table.get("any".to_string()){
-                 Some(x) => {
-                     string = toml::to_string(&table[&"any".to_string()]).unwrap()
-                 },
-
-                 None => {
-                     notify_error("Config Error: no section \"any\"");
-                     exit(0x0100)
-                 }
-             }
-         }
     }
-
-
-    if let  Err(e) = check_config_content(string.clone()) {
-        notify_error(
-            format!("Config Error: missing parameter in section: monitors.{}", section).as_str());
-        exit(0x0100);
-
-    }
-
-    let config: Config = check_config_content(string.clone()).unwrap();
-
-    config
 }
 
 
-pub fn count_data() -> Count {
-    let loc_cli = client_data();
+fn compare_size_parameters(axis: &str) -> i16 {
+    let binding = SIZE_PARAMETERS.read().unwrap();
+    let config_value = get_parameter(format!("config_size_{}", axis).as_str(), SIZE_PARAMETERS.clone(), CLIENT_DATA.read().unwrap().axis_data.get(axis).unwrap().window_size.clone());
+    let resize_arg = get_parameter(format!("resize_{}", axis).as_str(), SIZE_PARAMETERS.clone(), 0);
+    let mut output = config_value.clone();
+
+    if resize_arg == 1 {
+        output = binding.get(axis).unwrap().clone();
+    } else if output < 20 && PARAMETERS.read().unwrap().origin_size == true {
+        output = ((COUNT_DATA.read().unwrap().get("x").unwrap().monitor_resolution as f32 / 6f32) * 1.6 ).round() as i16;
+    }
     
-    let count = Count {
-        max_pos: Descartes {
-            x: loc_cli.screen_max.x - loc_cli.window_size.x - CONFIG_DATA.padding.right,
-            y: loc_cli.screen_max.y - loc_cli.window_size.y - CONFIG_DATA.padding.bottom,
-        },
-        window_center: Descartes {
-            x: loc_cli.cursor_pos.x - (loc_cli.window_size.x / 2),
-            y: loc_cli.cursor_pos.y - (loc_cli.window_size.y / 2),
-        }
-    };
-
-    count
-}
-
-
-pub fn parse_fullscreen(arg:hyprland::data::FullscreenMode) -> bool {
-    if arg == hyprland::data::FullscreenMode::None {
-        false
-    } else {
-        true
-    }
-}
-
-
-pub fn empty_client() -> Client {
-    Client {
-        address: Address::new(
-            "0x1a1a1a1a1a1a".to_string(),
-        ),
-        at: (500, 500),
-        size: (1920,1080),
-        workspace: WorkspaceBasic {
-            id: 4,
-            name: "Empty".to_string(),
-        },
-        floating: false,
-        // fullscreen: false,
-        // fullscreen_mode: 0,
-        fullscreen: hyprland::data::FullscreenMode::None,
-        fullscreen_client: hyprland::data::FullscreenMode::None,
-        monitor: 0,
-        initial_class: "Empty".to_string(),
-        class: "Empty".to_string(),
-        initial_title: "Empty".to_string(),
-        title: "Empty".to_string(),
-        pid: 28823,
-        xwayland: true,
-        pinned: false,
-        grouped: vec![],
-        mapped: true,
-        focus_history_id: 1,
-        swallowing: Some(
-            Box::<Address>::new(Address::new("0x0"))
-        )
-
-    }
-}
-
-
-pub fn client_data() -> FromClient {
-    let active_window = Client::get_active()
-        .unwrap()
-        .unwrap_or(
-            empty_client()
-        );
-    let active_monitor = Monitor::get_active().unwrap();
-    let cursor_position = CursorPosition::get().unwrap();
-
-    let client = FromClient {
-        window_pos: Descartes {
-            x: active_window.at.0,
-            y: active_window.at.1,
-        },
-        window_size: Descartes {
-            x: active_window.size.0,
-            y: active_window.size.1,
-        },
-        screen_min: Descartes {
-            x: active_monitor.x as i16,
-            y: active_monitor.y as i16,
-        },
-        screen_max: Descartes {
-            x: active_monitor.x as i16 + active_monitor.width as i16,
-            y: active_monitor.y as i16 + active_monitor.height as i16,
-        },
-        cursor_pos: Descartes{
-            x: cursor_position.x as i16,
-            y: cursor_position.y as i16,
-        },
-
-        class: active_window.class,
-        monitor: active_window.monitor.to_string(),
-        address: active_window.address,
-        floating: active_window.floating,
-        fullscreen: parse_fullscreen(active_window.fullscreen),
-    };
-
-
-    client
-}
-
-
-fn move_corner(pos: i16, max_pos: i16, win_size: i16) -> i16{
-    if pos >= max_pos / 2
-    { 0 }
-    else
-    { max_pos - win_size }
-}
-
-
-pub fn detect_padding(window_pos: i16, min_pos: i16, max_pos: i16) -> i16 {
-    let mut output = window_pos;
-
-    if CONFIG_DATA.detect_padding == true {
-        if window_pos <= min_pos {
-            output = min_pos
-        } else if window_pos >= max_pos {
-            output = max_pos
-        }
-    }
-
     output
 }
 
 
-pub fn window_position(param: &str, loc_cli: FromClient, loc_count: Count) ->  DispatchType<'static> {
+fn size(global_class: &str) {
+    let cli = CLIENT_DATA.read().unwrap().clone();
+    let monitor_id = cli.clone().monitor;
+    let table = get_table("windows", CONFIG_FILE.clone().as_str());
+    let list: toml::Table = table.as_table().unwrap().clone();
+    let mut class  = global_class.to_string();
 
-    let window_pos_x: i16;
-    let window_pos_y: i16;
-
-    let mut def_pos_x: i16 = loc_cli.window_pos.x;
-    let mut def_pos_y: i16 = loc_cli.window_pos.y;
-
-
-
-    if param == "cursor" {
-        def_pos_x = loc_count.window_center.x;
-        def_pos_y = loc_count.window_center.y;
-
-    } else if param == "random" {
-        let mut rng = rand::thread_rng();
-
-        def_pos_x = rng.gen_range(1..=(loc_cli.screen_max.x - loc_cli.window_size.x));
-        def_pos_y = rng.gen_range(1..=(loc_cli.screen_max.y - loc_cli.window_size.y));
-
-    } else if param == "opposite" {
-        def_pos_x = loc_cli.screen_max.x - loc_cli.cursor_pos.x - loc_cli.window_size.x / 2;
-        def_pos_y = loc_cli.screen_max.y - loc_cli.cursor_pos.y - loc_cli.window_size.y / 2;
-
-    } else if param == "corner" {
-        def_pos_x = move_corner(loc_cli.cursor_pos.x, loc_cli.screen_max.x, loc_cli.window_size.x);
-        def_pos_y = move_corner(loc_cli.cursor_pos.y, loc_cli.screen_max.y, loc_cli.window_size.y);
-
-
-    } else if param != "default" {
-        exit(0x0100)
+    if class.clone() == "".to_string() {
+        class = cli.class;
     }
+    
+    if list.keys().collect::<Vec<_>>().contains(&&class.clone()) {
+        let class_section = list[&class].clone();
+        let value = format!("{}{}", "monitor_", monitor_id);
+        
+        if class_section
+            .as_table()
+            .unwrap()
+            .keys()
+            .collect::<Vec<_>>()
+            .contains(&&value.clone()) {
+            let param_vec = &class_section.as_table().unwrap()[&value];
+            
+            SIZE_PARAMETERS.write().unwrap().insert("config_size_y".to_string(), param_vec[1].as_integer().unwrap().clone() as u16 as i16);
+            SIZE_PARAMETERS.write().unwrap().insert("config_size_x".to_string(), param_vec[0].as_integer().unwrap().clone() as u16 as i16);
 
+        } else if class_section
+            .as_table()
+            .unwrap()
+            .keys()
+            .collect::<Vec<_>>()
+            .contains(&&"monitor_any".to_string()) {
 
-    window_pos_x = detect_padding(
-        def_pos_x,
-        loc_cli.screen_min.x + CONFIG_DATA.padding.left,
-        loc_count.max_pos.x
-    );
+            let param_vec = &class_section.as_table().unwrap()[&"monitor_any".to_string()];
 
-    window_pos_y = detect_padding(
-        def_pos_y,
-        loc_cli.screen_min.y + CONFIG_DATA.padding.top,
-        loc_count.max_pos.y,
-    );
-
-    DispatchType::MoveActive(Exact(window_pos_x, window_pos_y))
-}
-
-
-pub fn dispatch_client(resize: bool, do_float: bool, toggle_float: bool, width: i16, height: i16, dispatcher_var: &str, tiled: bool) {
-
-    let loc_cli = client_data();
-
-    if do_float == true && loc_cli.floating == false ||
-        toggle_float == true ||
-        tiled == true && loc_cli.floating == true {
-
-        let _ = Dispatch::call(ToggleFloating(None));
-    }
-
-    if client_data().floating == false {
-        exit(0x0100)
-    }
-
-
-    if resize == true || width != CONFIG_DATA.size.x || height != CONFIG_DATA.size.y {
-        let _ = Dispatch::call(ResizeActive(Exact(width, height)));
-
-    } else {
-
-        let monitor_id = loc_cli.monitor;
-        let table = get_table("windows");
-        let class = loc_cli.class;
-        let list: toml::Table = table.as_table().unwrap().clone();
-
-
-        if list.keys().collect::<Vec<_>>().contains(&&class.clone()) {
-            let class_section = list[&class].clone();
-
-            let value = format!("{}{}", "monitor_", monitor_id);
-
-
-
-            if class_section
-                .as_table()
-                .unwrap()
-                .keys()
-                .collect::<Vec<_>>()
-                .contains(&&value) {
-                let param_vec = &class_section.as_table().unwrap()[&value];
-
-                let new_width = param_vec[0].as_integer().unwrap() as i16;
-                let new_height = param_vec[1].as_integer().unwrap() as i16;
-
-                let _ = Dispatch::call(ResizeActive(Exact(new_width, new_height)));
-
-            } else if  class_section
-                .as_table()
-                .unwrap()
-                .keys()
-                .collect::<Vec<_>>()
-                .contains(&&"monitor_any".to_string()) {
-                let param_vec = &class_section.as_table().unwrap()[&"monitor_any".to_string()];
-
-                let new_width = param_vec[0].as_integer().unwrap() as i16;
-                let new_height = param_vec[1].as_integer().unwrap() as i16;
-
-                let _ = Dispatch::call(ResizeActive(Exact(new_width, new_height)));
-            }
-
+            SIZE_PARAMETERS.write().unwrap().insert("config_size_x".to_string(), param_vec[0].as_integer().unwrap().clone() as u16 as i16);
+            SIZE_PARAMETERS.write().unwrap().insert("config_size_y".to_string(), param_vec[1].as_integer().unwrap().clone() as u16 as i16);
         }
     }
 
-    let loc_cli = client_data();
-    let loc_count = count_data();
+    let _ = Dispatch::call(ResizeActive(Exact(
+        compare_size_parameters("x"),
+        compare_size_parameters("y"),
+    )));
+}
 
-    let cord = window_position(dispatcher_var, loc_cli.clone(), loc_count);
+
+fn move_to_corner(min_point: i16, max_point: i16, resolution: i16, cursor_pos: i16, window_size: i16) -> i16 {
+    if cursor_pos <= (resolution / 2 ) + min_point {
+        min_point
+    } else {
+        max_point - window_size
+    }
+}
+
+
+pub fn position(axis: &str) -> Result<i16, String> {
+    let conf = CONFIG_DATA.read().unwrap().clone();
+    let conf_axis = conf.axis_data.get(axis).unwrap().clone();
+    let cli = CLIENT_DATA.read().unwrap().clone();
+    let cli_axis = cli.axis_data.get(axis).unwrap().clone();
+    let vars = PARAMETERS.read().unwrap().clone();
+    let system = vars.count_system.as_str();
+    let param = vars.dispatcher_var.as_str();
+
+    let size_offset = get_parameter(axis, SIZE_PARAMETERS.clone(), 0) / -2;
+    let mut offset = -4;
+
+    if vars.origin_size == false {
+        offset = ((COUNT_DATA.read().unwrap().get("x").unwrap().monitor_resolution as f32 / -12f32) *1.6).round() as i16;
+    } else if size_offset != 0 {
+        offset = size_offset;
+    }
+
+    let mut min_point = 0;
+    let mut max_point = cli_axis.monitor_max_point - cli_axis.monitor_min_point;
+    let mut resolution = max_point;
+    let mut cursor_pos = cli_axis.cursor_pos - cli_axis.monitor_min_point;
+    let window_size = cli_axis.window_size;
+    let window_position = cli_axis.window_pos - cli_axis.monitor_min_point;
+
+    if conf.detect_padding == true {
+        min_point = min_point + conf_axis.padding_min;
+        max_point = max_point - conf_axis.padding_max;
+        resolution = resolution  + conf_axis.padding_min - conf_axis.padding_max;
+        cursor_pos = cursor_pos + conf_axis.padding_min;
+    }
+
+    if system == "position" {
+        offset = window_size / -2
+    }
+
+    let mut position : Result<i16, String> = match param {
+        "cursor"   => {
+            if conf.detect_padding == true {
+                cursor_pos = cursor_pos - conf_axis.padding_min
+            }
+            Ok(cursor_pos + offset)
+        },
+        "center"   => Ok((max_point + min_point - offset * -2) / 2),
+        "close"    => Ok(move_to_corner(min_point, max_point, resolution, cursor_pos, offset * -2)),
+        "far"   => {
+            if conf.detect_padding  == true {
+                resolution  = resolution + conf_axis.padding_min * 2;
+            }
+            Ok(move_to_corner(min_point, max_point, resolution, resolution - cursor_pos, offset * -2))
+        },
+        "opposite" => {
+            if conf.detect_padding  == true {
+                max_point  = max_point + conf_axis.padding_min * 2;
+            }
+            Ok(max_point - cursor_pos + offset)
+        },
+        "random"   => {
+            if system == "position" {
+                Ok(window_position + offset)
+            } else {
+                let mut rng = rand::thread_rng();
+                Ok(rng.gen_range(min_point..=(max_point + offset)))
+            }
+        },
+        _          => {
+            if system == "position" {
+                Ok(window_position)
+            } else {
+                Err("any".to_string())
+            }
+        }
+    };
+    
+    match system {
+        "position" => {
+            let mut output = position?;
+            if CONFIG_DATA.read().unwrap().detect_padding == true && param != "center" && param != "any" {
+                if output <= min_point {
+                    output = min_point
+                } else if output + window_size >= max_point {
+                    output = max_point - window_size
+                }
+            }
+            position = Ok(get_parameter(axis, POSITION_PARAMETERS.clone(), output) + cli_axis.monitor_min_point);
+        },
+        "origin" => {
+            if get_parameter(format!("position_{}", axis).as_str(), POSITION_PARAMETERS.clone(), 0) == 1  &&
+                get_parameter(format!("resize_{}", axis).as_str(), SIZE_PARAMETERS.clone(), 0) == 1 {
+                position = Ok(
+                    POSITION_PARAMETERS.read().unwrap().get(axis).unwrap().clone()
+                );
+            } else if get_parameter(format!("position_{}", axis).as_str(), POSITION_PARAMETERS.clone(), 0) == 1 {
+                position = Ok(
+                    POSITION_PARAMETERS.read().unwrap().get(axis).unwrap().clone()
+                );
+            }
+        }, 
+         _  => {
+             notify_error(format!("No such coordinate system parameter: {}", system).as_str());
+             exit(0x0100)
+         }
+    }
+    
+    position
+}
+
+
+pub fn window_position() -> DispatchType<'static> {
+    DispatchType::MoveActive(Exact(
+        position("x").unwrap(),
+        position("y").unwrap(),
+    ))
+}
+
+
+pub fn dispatch_client() {
+    update_data();
+    let cli = CLIENT_DATA.read().unwrap().clone();
+    let vars = PARAMETERS.read().unwrap();
+
+    if vars.make_float == true && cli.floating == false && vars.tiled == false ||
+        vars.toggle_float == true ||
+        vars.tiled == true && cli.floating == true {
+        let _ = Dispatch::call(ToggleFloating(None));
+    }
+
+    if Client::get_active().unwrap().unwrap().floating == false { exit(0x0100) }
+    
+    if vars.resize == true {
+        let _ = Dispatch::call(ResizeActive(
+            Exact(
+                CONFIG_DATA.read().unwrap().axis_data.get("x").unwrap().default_size,
+                CONFIG_DATA.read().unwrap().axis_data.get("y").unwrap().default_size,
+            )
+        ));
+    } else { size("") }
+
+    update_data();
+    let cord = window_position();
     let _ = Dispatch::call(cord);
 }
 
 
-pub fn define_args(param: &str) {
-
-    /////// Arguments ///////
-    let mut dispatcher_var: &str = &"any";
-    let mut  do_float: bool = false;
-    let mut toggle_float: bool = false;
-    let mut resize: bool = false;
-    let mut width: i16  = crate::CONFIG_DATA.size.x;
-    let mut height: i16 = crate::CONFIG_DATA.size.y;
-    let mut tiled: bool = false;
-
-
-    for (i, arg) in args[1..args.len()].iter().enumerate() {
-        match arg.as_str() {
-            "--position" | "-p" => dispatcher_var = args[i + 2].as_str(),
-            "--resize"   | "-r" => resize = true,
-            "--tiled"    | "-t" => tiled = true,
-            "--width"    | "-w" => width =  args[i + 2].parse::<i16>().unwrap(),
-            "--height"   | "-h" => height = args[i + 2].parse::<i16>().unwrap(),
-            _ => continue,
-        }
+fn origin_size(axis: &str) -> i16 {
+    let backup = get_parameter(format!("config_size_{}", axis).as_str(), SIZE_PARAMETERS.clone(), 8);
+    let resize = get_parameter(format!("resize_{}", axis).as_str(), SIZE_PARAMETERS.clone(), 0);
+    if resize == 1  {
+        SIZE_PARAMETERS.read().unwrap().get(axis).unwrap().clone()
+    } else {
+        backup
     }
+}
 
 
-    /////// Command ///////
+fn origin_position(axis: &str) -> String {
+    let result = position(axis).clone();
+
+    if let Ok(_) = result {
+        result.unwrap().to_string()
+    } else {
+        "".to_string()
+    }
+}
+
+
+fn dispatch_window() {
+    let vars = PARAMETERS.read().unwrap();
     let start_addr = Client::get_active()
         .unwrap()
         .unwrap_or(
             empty_client()
         ).address;
 
-    if param == "togglefloating" {
-        toggle_float = true;
-    } else if param == "open" {
-        do_float = true;
+    if vars.make_float == true && parse_fullscreen(Client::get_active().unwrap().unwrap_or(empty_client()).fullscreen) {
+        let mut event = hyprland::event_listener::EventListener::new();
 
-        let _  = Command::new("hyprctl")
-            .arg("dispatch")
-            .arg("exec")
-            .arg("[float] ")
-            .arg(args[args.len() - 1].as_str())
-            .spawn();
+        event.add_window_open_handler(
+            move |_| {
+                dispatch_client();
+                exit(0x0100)
+            });
+        let _ = event.start_listener();
+
+    } else {
+        for _i in 0..=20 {
+            let mid_addr = Client::get_active()
+                .unwrap()
+                .unwrap_or(
+                    empty_client()
+                ).address;
+
+            if (mid_addr != start_addr && vars.make_float == true)
+                || (mid_addr == start_addr && vars.toggle_float == true) {
+                dispatch_client();
+                break
+            }
+            sleep(time::Duration::from_millis(50));
+        }
+    }
+}
+
+pub fn main_help(purpose: &str) {
+    let mut binary = "";
+    let mut executable = "";
+    let mut open_parameters = "";
+    
+    match purpose {
+        "open" => {
+            binary = "hfopen";
+            executable = "\"EXECUTABLE\"";
+            open_parameters = " \
+            \n    -t | --tiled                          - open window tiled\
+            \n    -o | --origin-size                    - let program open window with specific size and then resize it.\
+            \n        Recommended when size is predefined via config or console arguments\n";
+        },
+        "togglefloating" => binary = "hftogglefloating",
+        _  => {
+            notify_error(format!("No such purpose: {}", purpose).as_str());
+            exit(0x0100)
+        }    
     }
 
+    println!("\
+    \nUSAGE:\
+    \n\n    {} [ARGUMENTS] {}\
+    \n\nARGUMENTS:\
+    \n\n    --help                                - show this message\
+    \n    -c PATH | --config PATH               - define PATH for config\
+    \n\n    -p PARAMETER | --position PARAMETER   - move/open window accordig to PARAMETER\n        \
+    PARAMETERS: cursor, center, close, far, opposite\
+    \n{}    \
+    \n    -r | --resize                         - resize window according to config parameter `default_size`\
+    \n    -w SIZE | --width  SIZE               - set window width to SIZE\
+    \n    -h SIZE | --height SIZE               - set window height to SIZE\
+    \n    -x POSITION | --x-pos POSITION        - set window move/open position on x axis to POSITION\
+    \n    -y POSITION | --y-pos POSITION        - set window move/open position on y axis to POSITION\
+    \n\nDEFAULT CONFIG PATH:\
+    \n\n    `$HOME{}`
+    ",
+    binary,
+    executable,
+    open_parameters,
+    XDG_PATH.as_str()
+    );
+    
+    exit(0x0100)
+}
 
-    /////// Cycle ///////
-    for _i in 0 ..= 200 {
 
-        let mid_addr = Client::get_active()
-            .unwrap()
-            .unwrap_or(
-                empty_client()
-            ).address;
+pub fn change_window_state(purpose: &str) {
 
-        if (mid_addr != start_addr && do_float == true)
-             || (mid_addr == start_addr && toggle_float == true) {
+    /////// Parse arguments ///////
 
-            dispatch_client(resize, do_float, toggle_float, width, height, dispatcher_var, tiled);
-            break
+    if ARGS.len() < 2 && purpose == "open" {
+        main_help(purpose);
+    }
+
+    for (i, arg) in ARGS[1..ARGS.len()].iter().enumerate() {
+        match arg.as_str() {
+            "--help"  =>  main_help(purpose),
+            "--config" | "-c" => *CONFIG_DATA.write().unwrap() = config_data(ARGS[i + 2].to_string()),
+            "--position" | "-p" => PARAMETERS.write().unwrap().dispatcher_var = ARGS[i + 2].to_string(),
+            "--resize" | "-r" => PARAMETERS.write().unwrap().resize = true,
+            "--tiled" | "-t" => PARAMETERS.write().unwrap().tiled = true,
+            "--origin-size" | "-o" =>  PARAMETERS.write().unwrap().origin_size = true,
+            "--width" | "-w" => {
+                PARAMETERS.write().unwrap().origin_size = true;
+                SIZE_PARAMETERS.write().unwrap().insert("resize_x".to_string(), 1);
+                SIZE_PARAMETERS.write().unwrap().insert("x".to_string(), ARGS[i + 2].parse::<u16>().unwrap() as i16);
+            },
+            "--height" | "-h" =>{
+                PARAMETERS.write().unwrap().origin_size = true;
+                SIZE_PARAMETERS.write().unwrap().insert("resize_y".to_string(), 1);
+                SIZE_PARAMETERS.write().unwrap().insert("y".to_string(), ARGS[i + 2].parse::<u16>().unwrap() as i16);
+            },
+            "--x-pos" | "-x" => {
+                POSITION_PARAMETERS.write().unwrap().insert("position_x".to_string(), 1);
+                POSITION_PARAMETERS.write().unwrap().insert("x".to_string(), ARGS[i + 2].parse::<i16>().unwrap());
+            },
+            "--y-pos" | "-y" =>{
+                POSITION_PARAMETERS.write().unwrap().insert("position_y".to_string(), 1);
+                POSITION_PARAMETERS.write().unwrap().insert("y".to_string(), ARGS[i + 2].parse::<i16>().unwrap());
+            },
+            _ => continue,
+        };
+    }
+
+    /////// Apply parameters ///////
+
+    let vars = PARAMETERS.read().unwrap().clone();
+
+    let mut float = "float";
+    if vars.tiled == true {
+        float = "tiled"
+    }
+
+    if purpose == "togglefloating" {
+        PARAMETERS.write().unwrap().toggle_float = true;
+    } else if purpose == "open" {
+        PARAMETERS.write().unwrap().make_float = true;
+
+        let origin = format!(
+            "move {} {}",
+            origin_position("x"),
+            origin_position("y"),
+        );
+
+        let mut start_size = "".to_string();
+        if vars.origin_size == true {
+            start_size = format!(
+                "size {} {}",
+                origin_size("x"),
+                origin_size("y"),
+            );
         }
 
-        sleep(time::Duration::from_millis(50));
+        let _ = Dispatch::call(Exec(
+            format!(
+                "[{};{};{}] {}",
+                float,
+                origin,
+                start_size,
+                ARGS[ARGS.len() - 1]
+            ).as_str()
+        ));
     }
+
+    PARAMETERS.write().unwrap().count_system = "position".to_string();
+
+    dispatch_window()
 }

@@ -10,28 +10,33 @@ function notify() {
 
 
 function copy_config() {
-  config_dir="$HOME/.config/hypr/"
+  config_dir="$HOME/.config/hyprfloat/"
+
+  mkdir -p $config_dir 
+ 
 
   if [ -z "$( find "$config_dir" -name "hf.toml" )" ]; then
-    text="File hf.toml copied to ~/.config/hypr/hf.toml"
+    text="File hf.toml copied to $config_dir"
 
-    cp "$DIR/example/hf.toml" "$config_dir"
+    cp "$DIR/example/hf.toml" "$config_dir" || (echo "${bold}Config was not copied!" && exit 1)
 
     notify "$text"
   fi
 }
 
 function copy_binaries() {
-  text="Binaries: hfmove, hfopen, hfresize, hftogglefloat copied to /usr/bin/"
+  text="Binaries: hfmovewindow, hfopen, hfresizeactive, hftogglefloating copied to /usr/bin/"
 
-  cd "$DIR/target/release/" || exit 1
-  sudo cp ./{hfmove,hfopen,hfresize,hftogglefloat} /usr/bin/
-
+  cd "$DIR/target/release/" || (echo "${bold} Cannot enter '$DIR/target/release/'" && exit 1)
+  
+  sudo rm /usr/bin/{hfmovewindow,hfopen,hfresizeactive,hftogglefloating} 2> /dev/null
+  sudo cp ./{hfmovewindow,hfopen,hfresizeactive,hftogglefloating} /usr/bin/ || (echo "${bold}Binaries was not copied!" && exit 1)
+  
   notify "$text"
 }
 
 
-cargo build  --release
+cargo build --release || (echo "${bold}Build Error!" && exit 1)
 
 copy_config
 copy_binaries

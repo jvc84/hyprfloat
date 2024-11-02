@@ -5,28 +5,30 @@ name = "hyprfloat"
 version = "0.1.0"
 edition = "2021"
 
-
 [lib]
 name = "hyprfloat"
 path = "src/lib.rs"
 
+[lib.data]
+mane = "data"
+path= "src/data.rs"
+
 
 [[bin]]
-name = "hfmove"
-path = "src/bin/hfmove.rs"
+name = "hfmovewindow"
+path = "src/bin/hfmovewindow.rs"
 
 [[bin]]
 name = "hfopen"
 path = "src/bin/hfopen.rs"
 
 [[bin]]
-name = "hfresize"
-path = "src/bin/hfresize.rs"
-
+name = "hfresizeactive"
+path = "src/bin/hfresizeactive.rs"
 
 [[bin]]
-name = "hftogglefloat"
-path = "src/bin/hftogglefloat.rs"
+name = "hftogglefloating"
+path = "src/bin/hftogglefloating.rs"
 
 
 [dependencies]
@@ -39,6 +41,7 @@ rand = "0.9.0-alpha.2"
 lazy_static = "1.5"
 simple-home-dir = "0.4"
 
+
 [profile.release]
 target_os = "linux"
 opt-level = "s"
@@ -46,5 +49,3 @@ lto = true
 codegen-units = 16
 panic = "abort"
 debug = 0
-
-

@@ -1,9 +1,13 @@
 use fork::{daemon, Fork};
-use hyprfloat::define_args;
+use hyprfloat::{change_window_state, main_help};
 
 
 fn main() {
-    if let Ok(Fork::Child) = daemon(true, false) {
-        define_args("open");
+    let args = std::env::args().collect::<Vec<String>>();
+    
+    if args[1] == "--help".to_string() {
+        main_help("open")
+    } else if let Ok(Fork::Child) = daemon(true, false) {
+        change_window_state("open");
     }
 }
