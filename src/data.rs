@@ -122,8 +122,6 @@ pub fn empty_client() -> Client {
             name: "Empty".to_string(),
         },
         floating: false,
-        // fullscreen: false,
-        // fullscreen_mode: 0,
         fullscreen: hyprland::data::FullscreenMode::None,
         fullscreen_client: hyprland::data::FullscreenMode::None,
         monitor: 0,
