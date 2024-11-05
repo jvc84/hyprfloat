@@ -41,34 +41,7 @@ cd hyprfloat
 bash install.sh
 ```
 
-# Example
 
-```
-hfresize x y
-
-x   resize by x axis
-y   resize by y axis
-```
-
-
-```
-hfopen [ARGS] APPLICATION
-hftogglefloat [ARGS]
-
-ARGS:
-   -p | --position  POSITION  moves window to POSITION
-       POSITION:
-         cursor      moves window to cursor
-         opposite    moves window to mirror cursor position
-         corner      moves window to the farthest corner from cursor 
-         center      moves window to center
-         random      moves window to random position on screen
-
-  -w | --width WIDTH       resizes window width to WIDTH
-  -h | --height HEIGHT     resizes window hegight to HEIGHT
-  -r | --resize            resizes window to 'size' parameter in config
-  -t | --tiled             makes window tiled if it is floating
-```
 
 
 
