@@ -5,7 +5,9 @@ Improve your experience with floating windows!
 Supports Hyprland `>=42.0`
 
 **hfopen**
+
 https://github.com/user-attachments/assets/e70fcc55-a50f-483f-a1ec-5589ac08de68
+
 Example `hyprland.conf`:
 ```
 ...
@@ -15,7 +17,9 @@ bind = Super Shift, R, exec, hfopen -o -w 700 -h 650 -p center "kitty ranger"
 ```
 
 **hftogglefloating**
+
 https://github.com/user-attachments/assets/6816a7fa-ec8d-48fa-9fc5-b21af640e069
+
 Example `hyprland.conf`:
 ```
 ...
