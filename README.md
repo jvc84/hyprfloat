@@ -1,4 +1,4 @@
-# hyprfloat
+# Hyprfloat
 
 Improve your experience with floating windows!
 
