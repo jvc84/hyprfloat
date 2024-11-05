@@ -23,8 +23,8 @@ https://github.com/user-attachments/assets/6816a7fa-ec8d-48fa-9fc5-b21af640e069
 **Example** `hyprland.conf`:
 ```
 ...
-bind = Super Shift, Space, exec, hftogglefloating -p cursor
-bind = Super Shift, Space, exec, hftogglefloating -r -p center
+bind = Super Shift, Space, exec, hftogglefloating -p center
+bind = Super Shift, Space, exec, hftogglefloating -r -p cursor
 ...
 ```
 
@@ -41,7 +41,7 @@ cd hyprfloat
 bash install.sh
 ```
 
-# Exampl
+# Example
 
 ```
 hfresize x y
@@ -71,13 +71,6 @@ ARGS:
 ```
 
 
-```
-USAGE:
-
-    hfmovewindow [ARGUMENTS] [DIRECTION]
-
-ARGUMENTS:\\n\n    --help                                - show this message\\n    -c PATH | --config PATH               - define PATH for config\\n    -p PARAMETER | --position PARAMETER   - move/open window according to PARAMETER\\n        PARAMETERS:\\n            cursor      - move/open window at the cursor position\\n            center      - move/open window at the center\\n            close       - move/open window at the closest corner from cursor\\n            far         - move/open window at the farthest corner from cursor\\n            opposite    - move/open window at the mirror of cursor position\\n            random      - move/open window at the random position on screen\\n\nDIRECTIONS:\\n\n    l        - move window left according to config parameters\\n    r        - move window right according to config parameters\\n    u        - move window up according to config parameters\\n    d        - move window down according to config parameters\\n\nDEFAULT CONFIG PA
-```
 
 
 
