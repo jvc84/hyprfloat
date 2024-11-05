@@ -1,16 +1,14 @@
 # hyprfloat
 
-Hyprfloat is a hyprland plugin, desined to improve your experience with floating windows 
+Improve your experience with floating windows!
 
 Supports Hyprland `>=42.0`
 
 
-
-https://github.com/user-attachments/assets/5505e90a-c387-404c-879b-6cb97b96edca
-
+https://github.com/user-attachments/assets/e70fcc55-a50f-483f-a1ec-5589ac08de68
 
 
-**Requirements**
+##Requirements
 ```
 rust/rustup
 sudo
