@@ -7,7 +7,7 @@
     default_size = [900,700]
     # margin  = [margin x, margin y]
     margin = [8,8]
-    
+ 
     detect_padding = true
     standard_resize = false
     stick_to_borders = true
@@ -21,23 +21,26 @@
     # margin = [2,2]
 
     # detect_padding = true 
-    # standard_resize = false 
-    # stick_to_borders = true 
+    # standard_resize = true 
+    # stick_to_borders = false
     # invert_keys_in_stick_mode = true
     # resize_through_borders = false 
 
 
 [windows]
 
-    ## [windows.window_class]
+    # [windows.initial_class]
+    # minimal_size = [minimal_size_x, minimal_size_y]
+    # monitor_any = [size_x_on_any_monitor, size_y_on_any_monitor]
+    # monitor_0 = [size_x_on_monitor_0, size_y_on_monitor_0]
+    # monitor_n = [size_x_on_monitor_n, size_y_on_monitor_n]
+    
+    [windows.kitty]
+    minimal_size = [80,80]
 
-    #[windows.kitty]
-    #minimal_size = [80,80]
-
-    ## monitor_n = [window_size_x, window_size_y]
-    #monitor_any = [500,500]
-    #monitor_0 = [600, 500]
-    #monitor_1 = [700, 600]
+    monitor_any = [500,500]
+    monitor_0 = [600, 500]
+    monitor_1 = [700, 600]
 
     [windows.firefox]
     minimal_size = [450,120]

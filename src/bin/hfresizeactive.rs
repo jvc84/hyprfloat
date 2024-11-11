@@ -186,16 +186,24 @@ fn count_move_resize(axis: &str, global_resize: i16) -> (i16, i16) {
 fn resizeactive_help() {
     println!("\
     \nUSAGE:\
-    \n\n    hfresizeactive [ARGUMENT] [exact [force]] RESIZE_X RESIZE_Y\
-    \n\nARGUMENTS:\
-    \n\n    --help                   - show this message\
+    \n\
+    \n    hfresizeactive [ARGUMENT] [exact [force]] RESIZE_X RESIZE_Y\
+    \n\
+    \nARGUMENTS:\
+    \n\
+    \n    -h      | --help         - show this message\
     \n    -c PATH | --config PATH  - define PATH for config\
-    \n\nexact                    - make size of floating window exactly RESIZE_X pixels on x axis, RESIZE_Y pixels on y axis\
-    \nexact force              - do not detect padding, even if `detect_padding` option in config equals `true`\
-    \n\nRESIZE_X                 - resize window by x axis on RESIZE_X pixels according to config parameters\
-    \nRESIZE_Y                 - resize window by y axis on RESIZE_Y pixels according to config parameters  \
-    \n\nDEFAULT CONFIG PATH:\
-    \n\n    `$HOME{}`
+    \n\
+    \nexact          - make size of floating window exactly RESIZE_X pixels on x axis, RESIZE_Y pixels on y axis\
+    \nexact force    - make size of floating window exactly RESIZE_X pixels on x axis, RESIZE_Y pixels on y axis\
+    \n    and do not detect padding, even if `detect_padding` option in config equals `true`\
+    \n\
+    \nRESIZE_X       - resize window by x axis on RESIZE_X pixels according to config parameters\
+    \nRESIZE_Y       - resize window by y axis on RESIZE_Y pixels according to config parameters  \
+    \n\
+    \nDEFAULT CONFIG PATH:\
+    \n\
+    \n    `$HOME{}`
     ",
     XDG_PATH.as_str()
     );
@@ -236,8 +244,8 @@ fn main() {
         update_data();
         *EXACT.write().unwrap() = true;
         CONFIG_DATA.write().unwrap().invert_keys_in_stick_mode = false;
-        resize_x = args[args.len() - 1].parse::<i16>().unwrap() - CLIENT_DATA.read().unwrap().axis_data.get("x").unwrap().window_size;
-        resize_y = args[args.len()].parse::<i16>().unwrap() - CLIENT_DATA.read().unwrap().axis_data.get("y").unwrap().window_size;
+        resize_x = args[args.len() - 2].parse::<i16>().unwrap() - CLIENT_DATA.read().unwrap().axis_data.get("x").unwrap().window_size;
+        resize_y = args[args.len() - 1].parse::<i16>().unwrap() - CLIENT_DATA.read().unwrap().axis_data.get("y").unwrap().window_size;
     } else {
         let mut int_args: Vec<i16> = vec![];
 
@@ -253,11 +261,8 @@ fn main() {
     }
 
     if CLIENT_DATA.read().unwrap().floating == true {
-        let mut position_x = 0;
-        let mut position_y = 0;
-
-        (position_x, resize_x) = count_move_resize("x", resize_x);
-        (position_y, resize_y) = count_move_resize("y", resize_y);
+        let (position_x, resize_x) = count_move_resize("x", resize_x);
+        let (position_y, resize_y) = count_move_resize("y", resize_y);
 
         let _ =Dispatch::call(
             DispatchType::MoveActive(

@@ -44,7 +44,7 @@ simple-home-dir = "0.4"
 
 [profile.release]
 target_os = "linux"
-opt-level = "s"
+opt-level = 3
 lto = true
 codegen-units = 16
 panic = "abort"
