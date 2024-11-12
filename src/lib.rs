@@ -363,7 +363,7 @@ pub fn dispatch_client() {
 }
 
 
-fn origin_size(axis: &str) -> i16 {
+fn get_origin_size(axis: &str) -> i16 {
     let resize = get_parameter(format!("define_size_{}", axis).as_str(), SIZE_PARAMETERS.clone(), 0);
     if resize == 1  {
         SIZE_PARAMETERS.read().unwrap().get(axis).unwrap().clone()
@@ -493,7 +493,6 @@ pub fn change_window_state(purpose: &str) {
 
     /////// Parse arguments ///////
     
-    let mut origin = false;
     if ARGS.len() < 2 && purpose == "open" {
         main_help(purpose);
     }
@@ -544,18 +543,18 @@ pub fn change_window_state(purpose: &str) {
     } else if purpose == "open" {
         PARAMETERS.write().unwrap().make_float = true;
 
-        let origin = format!(
+        let origin_position = format!(
             "move {} {}",
             origin_position("x"),
             origin_position("y"),
         );
 
-        let mut start_size = "".to_string();
+        let mut origin_size = "".to_string();
         if params.origin_size == true {
-            start_size = format!(
+            origin_size = format!(
                 "size {} {}",
-                origin_size("x"),
-                origin_size("y"),
+                get_origin_size("x"),
+                get_origin_size("y"),
             );
         }
 
@@ -563,8 +562,8 @@ pub fn change_window_state(purpose: &str) {
             format!(
                 "[{};{};{}] {}",
                 float,
-                origin,
-                start_size,
+                origin_position,
+                origin_size,
                 ARGS[ARGS.len() - 1]
             ).as_str()
         ));
