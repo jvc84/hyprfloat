@@ -8,7 +8,7 @@ Supports Hyprland `>=42.0`
 
 https://github.com/user-attachments/assets/e70fcc55-a50f-483f-a1ec-5589ac08de68
 
-**Example** `hyprland.conf`:
+## Example `hyprland.conf`:
 ```
 bind = Super Shift, Return, exec, hfopen -o -w 600 -h 450 -p cursor kitty
 bind = Super Shift, R, exec, hfopen -o -w 700 -h 650 -p center "kitty ranger"
