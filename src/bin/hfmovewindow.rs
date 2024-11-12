@@ -61,7 +61,10 @@ fn move_window(direction: &str) {
             "u" => Up,
             "d" => Down,
             "r" => Right,
-             _  => exit(0x0100),
+             _  => {
+                 notify_error(format!("No such direction:: {}", direction).as_str());
+                 exit(0x0100)
+             },
         };
         dispatcher  = DispatchType::MoveWindow(Direction(direction));
     }
