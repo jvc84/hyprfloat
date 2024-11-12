@@ -34,7 +34,9 @@
     # monitor_any = [size_x_on_any_monitor, size_y_on_any_monitor]
     # monitor_0 = [size_x_on_monitor_0, size_y_on_monitor_0]
     # monitor_n = [size_x_on_monitor_n, size_y_on_monitor_n]
-    
+
+    # Example
+
     [windows.kitty]
     minimal_size = [80,80]
 
