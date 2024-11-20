@@ -19,7 +19,6 @@ use hyprfloat::{
     XDG_PATH,
     CONFIG_DATA,
     CLIENT_DATA,
-    update_data,
     get_table,
     notify_error,
     config_data
@@ -98,7 +97,7 @@ fn count_move_resize(axis: &str, global_resize: i16) -> (i16, i16) {
     let working_area = padding_max - padding_min;
 
     if  cli.floating == true && conf.detect_padding == true &&
-        conf.invert_keys_in_stick_mode == true && conf.resize_through_borders == false &&
+        conf.invert_resize_in_stick_mode == true && conf.resize_through_borders == false &&
         conf.stick_to_borders == true &&
         ((window_pos + window_size >= padding_max) && window_pos > padding_min)  &&
         ((window_pos + window_size <= padding_max) && window_pos >= padding_min) {
@@ -187,19 +186,18 @@ fn resizeactive_help() {
     println!("\
     \nUSAGE:\
     \n\
-    \n    hfresizeactive [ARGUMENT] [exact [force]] RESIZE_X RESIZE_Y\
+    \n    hfresizeactive [ARGUMENTS] RESIZE_X RESIZE_Y\
     \n\
     \nARGUMENTS:\
     \n\
-    \n    -h      | --help         - show this message\
-    \n    -c PATH | --config PATH  - define PATH for config\
-    \n\
-    \nexact          - make size of floating window exactly RESIZE_X pixels on x axis, RESIZE_Y pixels on y axis\
-    \nexact force    - make size of floating window exactly RESIZE_X pixels on x axis, RESIZE_Y pixels on y axis\
-    \n    and do not detect padding, even if `detect_padding` option in config equals `true`\
+    \n    -h, --help          - show this message\
+    \n    -c, --config PATH    - define PATH for config\
+    \n    -e, --exact          - make size of floating window exactly RESIZE_X pixels on x axis, RESIZE_Y pixels on y axis\
+    \n    -f, --force          - do not detect padding, even if `detect_padding` option in config equals `true`\
+    \n    -n, --no-invert      - do not invert resize in stick mode, even if `invert_resize_in_stick_mode` option in config equals `true`\
     \n\
     \nRESIZE_X       - resize window by x axis on RESIZE_X pixels according to config parameters\
-    \nRESIZE_Y       - resize window by y axis on RESIZE_Y pixels according to config parameters  \
+    \nRESIZE_Y       - resize window by y axis on RESIZE_Y pixels according to config parameters\
     \n\
     \nDEFAULT CONFIG PATH:\
     \n\
@@ -211,56 +209,69 @@ fn resizeactive_help() {
     exit(0x0100);
 }
 
-fn main() {
-    *BORDERS_PARAM.write().unwrap() = CONFIG_DATA.read().unwrap().resize_through_borders.clone();
-    *INVERT_PARAM.write().unwrap() = CONFIG_DATA.read().unwrap().invert_keys_in_stick_mode.clone();
 
-    let mut resize_x: i16 = 0;
-    let mut resize_y: i16 = 0;
-    let mut args: Vec<String> = ARGS.read().unwrap().clone();
+fn get_resize(axis: &str, negative_index: usize) -> i16 {
+    let cli =  CLIENT_DATA.read().unwrap();
+    let conf =  CONFIG_DATA.read().unwrap();
+    let args = ARGS.read().unwrap();
 
+    let index = args.len() - negative_index;
+    let mut resize = args[index].clone().parse::<i16>().unwrap();
 
-    match args[1].as_str() {
-        "--help" => resizeactive_help(),
-        "--config" | "-c" => {
-            *CONFIG_DATA.write().unwrap() = config_data(args[2].to_string());
-            args.remove(1);
-            args.remove(1);
-        },
-        _ => {
-            if args.len() < 3 {
-                resizeactive_help()
-            }
-        }
-    }
-    
-    if args[1] == "exact".to_string() {
-        if args[2] == "force".to_string() {
-            update_data();
-            CONFIG_DATA.write().unwrap().resize_through_borders = true;
-            args.remove(2);
+    if *EXACT.read().unwrap() == true {
+       resize - cli.axis_data.get(axis).unwrap().window_size
+    } else {
+        
+        if resize % 2 != 0 && conf.standard_resize == false && cli.floating == true {
+            resize = resize + 1;
         }
         
-        update_data();
-        *EXACT.write().unwrap() = true;
-        CONFIG_DATA.write().unwrap().invert_keys_in_stick_mode = false;
-        resize_x = args[args.len() - 2].parse::<i16>().unwrap() - CLIENT_DATA.read().unwrap().axis_data.get("x").unwrap().window_size;
-        resize_y = args[args.len() - 1].parse::<i16>().unwrap() - CLIENT_DATA.read().unwrap().axis_data.get("y").unwrap().window_size;
-    } else {
-        let mut int_args: Vec<i16> = vec![];
+        resize
+    }
+}
 
-        for i in 1..=2 {
-            let mut arg: i16 = args[i].parse::<i16>().unwrap();
-            if arg % 2 != 0 && CONFIG_DATA.read().unwrap().standard_resize == false && CLIENT_DATA.read().unwrap().floating == true {
-                arg = arg + 1;
+
+fn main() {
+    *BORDERS_PARAM.write().unwrap() = CONFIG_DATA.read().unwrap().resize_through_borders.clone();
+    *INVERT_PARAM.write().unwrap() = CONFIG_DATA.read().unwrap().invert_resize_in_stick_mode.clone();
+
+    let args: Vec<String> = ARGS.read().unwrap().clone();
+
+    let mut no_inverting = false;
+    let mut resize_through_borders = false;
+
+    for (i, arg) in args.iter().enumerate() {
+        match arg.as_str() {
+            "-h" | "--help" => resizeactive_help(),
+            "-c" | "--config" => *CONFIG_DATA.write().unwrap() = config_data(args[i + 1].to_string()),
+            "-n" | "--no-invert" => no_inverting = true,
+            "-e" | "--exact" => {
+                *EXACT.write().unwrap() = true;
+                no_inverting = true
+            },
+            "-f" | "--force" => resize_through_borders = true,
+            _ => {
+                if args.len() < 3 {
+                    resizeactive_help()
+                }
             }
-            int_args.push(arg);
         }
-        resize_x = int_args[0];
-        resize_y = int_args[1];
     }
 
-    if CLIENT_DATA.read().unwrap().floating == true {
+    if no_inverting == true {
+        CONFIG_DATA.write().unwrap().invert_resize_in_stick_mode = false;
+    }
+    if resize_through_borders == true {
+        CONFIG_DATA.write().unwrap().resize_through_borders = true;
+    }
+    
+    let cli =  CLIENT_DATA.read().unwrap();
+    
+    let resize_x = get_resize("x", 2);
+    let resize_y = get_resize("y", 1);
+    
+
+    if cli.floating == true {
         let (position_x, resize_x) = count_move_resize("x", resize_x);
         let (position_y, resize_y) = count_move_resize("y", resize_y);
 
