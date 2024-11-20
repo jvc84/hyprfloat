@@ -101,13 +101,6 @@ bind = Super Shift, Z, exec, hfmovewindow -p far
 
 # Information
 
-            cursor               to the cursor position
-            center               to the center
-            close                to the closest corner from cursor
-            far                  to the farthest corner from cursor
-            opposite             to the mirror of cursor position
-            random               to the random position on screen
-```
 </details>
 
 <details> 
@@ -163,6 +156,7 @@ DIRECTIONS:
     u        - move window up according to config parameters
     d        - move window down according to config parameters
 ```
+
 </details>
 
 # Requirements 
