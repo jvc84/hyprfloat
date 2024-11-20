@@ -4,7 +4,7 @@
 
 ## Improve your experience with floating windows!
 
-Supports Hyprland `>=42.0`
+Supports `Hyprland >= 42.0`
 
 # Demonstration
 
