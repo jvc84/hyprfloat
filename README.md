@@ -101,7 +101,76 @@ bind = Super Shift, Z, exec, hfmovewindow -p far
 
 # Information
 
+
+
+
+<details> 
+  <summary>hfopen</summary>
+
+  USAGE:    `hfopen [ARGUMENTS] "EXECUTABLE"`
+
+ARGUMENTS:
+```
+    -t, --tiled                 - open window tiled
+    -o, --origin-size           - let program open window with specific size and then resize it.
+        Recommended when size is predefined via config or console arguments
+    -d, --default-size          - resize window according to config parameter `default_size`
+    -c, --config PATH           - define PATH for config
+    -s, --size SIZE_XxSIZE_Y    - set window size by x axis to SIZE_X, by y axis to SIZE_Y
+    -m, --move POS_XxPOS_Y      - set window open position by x axis to POS_X, by y axis to POS_Y
+    -p, --position PARAMETER    - open window according to PARAMETER
+        PARAMETERS:
+            l, left              to the left center position
+            r, right             to the right center position
+            t, top               to the top center position
+            b, bottom            to the bottom center position
+            tl, top-left         to the top-left corner
+            tr, top-right        to the top-right corner
+            bl, bottom-left      to the bottom-left corner
+            br, bottom-right     to the bottom-right corner
+            cursor               to the cursor position
+            center               to the center
+            close                to the closest corner from cursor
+            far                  to the farthest corner from cursor
+            opposite             to the mirror of cursor position
+            random               to the random position on screen
+```
+  
 </details>
+
+
+
+<details> 
+  <summary>hftogglefloating</summary>
+
+  USAGE:    `hftogglefloating [ARGUMENTS]`
+
+ARGUMENTS:
+```
+    -d, --default-size          - resize window according to config parameter `default_size`
+    -c, --config PATH           - define PATH for config
+    -s, --size SIZE_XxSIZE_Y    - set window size by x axis to SIZE_X, by y axis to SIZE_Y
+    -m, --move POS_XxPOS_Y      - set window move position by x axis to POS_X, by y axis to POS_Y
+    -p, --position PARAMETER    - move window according to PARAMETER
+        PARAMETERS:
+            l, left              to the left center position
+            r, right             to the right center position
+            t, top               to the top center position
+            b, bottom            to the bottom center position
+            tl, top-left         to the top-left corner
+            tr, top-right        to the top-right corner
+            bl, bottom-left      to the bottom-left corner
+            br, bottom-right     to the bottom-right corner
+            cursor               to the cursor position
+            center               to the center
+            close                to the closest corner from cursor
+            far                  to the farthest corner from cursor
+            opposite             to the mirror of cursor position
+            random               to the random position on screen
+```
+  
+</details>
+
 
 <details> 
   <summary>hfresizeactive</summary>
@@ -158,6 +227,7 @@ DIRECTIONS:
 ```
 
 </details>
+
 
 # Requirements 
 
