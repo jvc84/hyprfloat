@@ -101,7 +101,7 @@ bind = Super Shift, Z, exec, hfmovewindow -p far
 
 # Information
 
-You can get this information by using flag `--help` of `-h` with any binary
+You can get this information by using flag `--help` or `-h` with any binary
 
 Default config path: `$HOME/.config/hyprfloat/hf.toml`
 
