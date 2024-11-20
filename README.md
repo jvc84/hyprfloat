@@ -1,4 +1,4 @@
-# Hyprfloat <img src="https://cyber.dabamos.de/88x31/blink-0.gif" width="88" height="31"           />
+# Hyprfloat        #<img src="https://cyber.dabamos.de/88x31/blink-0.gif" width="88" height="31"/>
 
 Improve your experience with floating windows!
 
