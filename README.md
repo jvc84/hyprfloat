@@ -209,9 +209,10 @@ ARGUMENTS:
     -f, --force          - do not detect padding, even if `detect_padding` option in config equals `true`
     -n, --no-invert      - do not invert resize in stick mode, even if `invert_resize_in_stick_mode` option in config equals `true`
 ```
+```
 RESIZE_X       - resize window by x axis on RESIZE_X pixels according to config parameters
 RESIZE_Y       - resize window by y axis on RESIZE_Y pixels according to config parameters
-
+```
 </details>
 
 <details> 
