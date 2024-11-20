@@ -63,7 +63,6 @@ Default config path:  `$HOME/.config/hyprfloat/hf.toml`
 
 ARGUMENTS:
 ```
-    -h, --help                  - show this message
     -d, --default-size          - resize window according to config parameter `default_size`
     -c, --config PATH           - define PATH for config
     -s, --size SIZE_XxSIZE_Y    - set window size by x axis to SIZE_X, by y axis to SIZE_Y
@@ -95,7 +94,6 @@ USAGE:    `hfresizeactive [ARGUMENTS] RESIZE_X RESIZE_Y`
 
 ARGUMENTS:
 ```
-    -h, --help           - show this message
     -c, --config PATH    - define PATH for config
     -e, --exact          - make size of floating window exactly RESIZE_X pixels on x axis, RESIZE_Y pixels on y axis
     -f, --force          - do not detect padding, even if `detect_padding` option in config equals `true`
@@ -112,7 +110,6 @@ RESIZE_Y       - resize window by y axis on RESIZE_Y pixels according to config 
 
 ARGUMENTS:
 ```
-    -h           | --help                      - show this message
     -c PATH      | --config PATH               - define PATH for config
     -p, --position PARAMETER    - move window according to PARAMETER
         PARAMETERS:
