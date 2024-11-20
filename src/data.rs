@@ -37,7 +37,7 @@ pub struct ConfigAxisData {
 
 #[derive(Deserialize, Clone)]
 pub struct CountAxisData {
-    pub max_pos: i16,
+    pub max_position: i16,
     pub window_center: i16,
     pub monitor_resolution: i16,
 }
@@ -57,7 +57,7 @@ pub struct Config {
     pub detect_padding: bool,
     pub standard_resize: bool,
     pub stick_to_borders: bool,
-    pub invert_keys_in_stick_mode: bool,
+    pub invert_resize_in_stick_mode: bool,
     pub resize_through_borders: bool,
 }
 
@@ -79,7 +79,7 @@ pub struct PreConfig {
     pub detect_padding: bool,
     pub standard_resize: bool,
     pub stick_to_borders: bool,
-    pub invert_keys_in_stick_mode: bool,
+    pub invert_resize_in_stick_mode: bool,
     pub resize_through_borders: bool,
 }
 
@@ -204,7 +204,7 @@ pub fn get_table(section: &str, config_path: &str) -> toml::value::Value{
 
 pub fn config_data(config_path: String) -> Config {
     let table = get_table("monitors", config_path.as_str());
-    let mut section_data_string: String = "empty".to_string();
+    let mut section_data_string: String = "".to_string();
     let mut section = Monitor::get_active().unwrap().id.to_string();
 
     match table.get(section.clone()) {
@@ -238,8 +238,8 @@ pub fn config_data(config_path: String) -> Config {
     axis_map.insert(
         "x".to_string(),
         ConfigAxisData {
-            padding_min: pre_config.padding.0,
-            padding_max: pre_config.padding.3,
+            padding_min: pre_config.padding.3,
+            padding_max: pre_config.padding.2,
             default_size: pre_config.default_size.0 as i16,
             margin: pre_config.margin.0 as i16
         }
@@ -248,7 +248,7 @@ pub fn config_data(config_path: String) -> Config {
     axis_map.insert(
         "y".to_string(),
         ConfigAxisData {
-            padding_min: pre_config.padding.1,
+            padding_min: pre_config.padding.0,
             padding_max: pre_config.padding.2,
             default_size: pre_config.default_size.1 as i16,
             margin: pre_config.margin.1 as i16
@@ -260,7 +260,7 @@ pub fn config_data(config_path: String) -> Config {
         detect_padding: pre_config.detect_padding,
         standard_resize: pre_config.standard_resize,
         stick_to_borders: pre_config.stick_to_borders,
-        invert_keys_in_stick_mode: pre_config.invert_keys_in_stick_mode,
+        invert_resize_in_stick_mode: pre_config.invert_resize_in_stick_mode,
         resize_through_borders: pre_config.resize_through_borders,
     };
 
@@ -319,7 +319,7 @@ pub fn count_data(cli_data: FromClient) -> HashMap<String, CountAxisData> {
     for item in list {
         let cli_axis_data = cli_data.axis_data.get(item).unwrap();
         let data = CountAxisData {
-            max_pos: cli_axis_data.monitor_max_point - loc_conf.axis_data.get(item).unwrap().padding_max - cli_axis_data.window_size,
+            max_position: cli_axis_data.monitor_max_point - loc_conf.axis_data.get(item).unwrap().padding_max - cli_axis_data.window_size,
             window_center: cli_axis_data.cursor_pos - (cli_axis_data.window_size / 2),
             monitor_resolution: cli_axis_data.monitor_max_point - cli_axis_data.monitor_min_point,
         };

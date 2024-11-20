@@ -1,7 +1,7 @@
 [monitors]
 
     [monitors.any]
-    # padding  = [left, top, bottom, right]
+    # padding  = [top, right, bottom, left]
     padding = [40,40,40,40]
     # default_size = [width, height]
     default_size = [900,700]
@@ -11,7 +11,7 @@
     detect_padding = true
     standard_resize = false
     stick_to_borders = true
-    invert_keys_in_stick_mode = true
+    invert_resize_in_stick_mode = true
     resize_through_borders = false
 
 
@@ -23,7 +23,7 @@
     # detect_padding = true 
     # standard_resize = true 
     # stick_to_borders = false
-    # invert_keys_in_stick_mode = true
+    # invert_resize_in_stick_mode = true
     # resize_through_borders = false 
 
 
