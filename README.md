@@ -10,7 +10,7 @@
 
 Supports `Hyprland >= 42.0`
 
-Hyprfloat is a project, presented by 4 binaries, based on common library: `hfopen`, `hftogglefloating`, `hfresizeactive`, `hfmove`. 
+Hyprfloat is a project, presented by 4 binaries, based on common library: `hfopen`, `hftogglefloating`, `hfresizeactive`, `hfmovewindow`. 
 This project is designed to simplify control of foating widows with keyboard and customize their behaviour using config and console arguments
 
 # Information
