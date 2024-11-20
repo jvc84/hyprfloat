@@ -109,6 +109,8 @@ Default config path: `$HOME/.config/hyprfloat/hf.toml`
 <details> 
   <summary>hfopen</summary>
 
+# hfopen 
+
   USAGE:    `hfopen [ARGUMENTS] "EXECUTABLE"`
 
 ARGUMENTS:
@@ -144,6 +146,8 @@ ARGUMENTS:
 
 <details> 
   <summary>hftogglefloating</summary>
+
+# hftogglefloating
 
   USAGE:    `hftogglefloating [ARGUMENTS]`
 
