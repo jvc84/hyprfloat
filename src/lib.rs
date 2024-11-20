@@ -95,11 +95,13 @@ fn get_parameter(axis: &str, arg: Arc<RwLock<HashMap<String, i16>>>, default_val
 
 fn compare_size_parameters(axis: &str) -> i16 {
     let binding = SIZE_PARAMETERS.read().unwrap();
-    let config_value = get_parameter(format!("define_config_size_{}", axis).as_str(), SIZE_PARAMETERS.clone(), CLIENT_DATA.read().unwrap().axis_data.get(axis).unwrap().window_size.clone());
-    let resize_arg = get_parameter(format!("define_size_{}", axis).as_str(), SIZE_PARAMETERS.clone(), 0);
-    let mut output = config_value.clone();
+    let mut output = get_parameter(
+        format!("define_config_size_{}", axis).as_str(),
+        SIZE_PARAMETERS.clone(), 
+        CLIENT_DATA.read().unwrap().axis_data.get(axis).unwrap().window_size.clone()
+    );
 
-    if resize_arg == 1 {
+    if SIZE_PARAMETERS.read().unwrap().contains_key(axis) {
         output = binding.get(axis).unwrap().clone();
     } else if output < 20 && PARAMETERS.read().unwrap().origin_size == true {
         output = ((COUNT_DATA.read().unwrap().get("x").unwrap().monitor_resolution as f32 / 6f32) * 1.6 ).round() as i16;
@@ -299,9 +301,8 @@ pub fn position(axis: &str) -> Result<i16, String> {
             position = Ok(get_parameter(axis, POSITION_PARAMETERS.clone(), output) + cli_axis.monitor_min_point);
         },
         "origin" => {
-            if get_parameter(format!("define_position_{}", axis).as_str(), POSITION_PARAMETERS.clone(), 0) == 1 {
-                if get_parameter(format!("define_size_{}", axis).as_str(), SIZE_PARAMETERS.clone(), 0) == 1 {
-                    notify_error(POSITION_PARAMETERS.read().unwrap().get(axis).unwrap().clone().to_string().as_str());
+            if   POSITION_PARAMETERS.read().unwrap().contains_key(axis) {
+                if SIZE_PARAMETERS.read().unwrap().contains_key(axis) {
                     position = Ok(
                         POSITION_PARAMETERS.read().unwrap().get(axis).unwrap().clone() 
                     );
@@ -312,8 +313,8 @@ pub fn position(axis: &str) -> Result<i16, String> {
                     }
 
                     position = Ok(
-                        POSITION_PARAMETERS.read().unwrap().get(axis).unwrap().clone()
-                            - (((COUNT_DATA.read().unwrap().get("x").unwrap().monitor_resolution as f32 / -12f32) * 1.6).round() as i16  / k)
+                        POSITION_PARAMETERS.read().unwrap().get(axis).unwrap().clone() -
+                            (COUNT_DATA.read().unwrap().get("x").unwrap().monitor_resolution as f32 / -12f32 * 1.6).round() as i16 / k
                     );
                 }
             }
@@ -364,8 +365,7 @@ pub fn dispatch_client() {
 
 
 fn get_origin_size(axis: &str) -> i16 {
-    let resize = get_parameter(format!("define_size_{}", axis).as_str(), SIZE_PARAMETERS.clone(), 0);
-    if resize == 1  {
+    if SIZE_PARAMETERS.read().unwrap().contains_key(axis)  {
         SIZE_PARAMETERS.read().unwrap().get(axis).unwrap().clone()
     } else {
         get_parameter(format!("define_config_size_{}", axis).as_str(), SIZE_PARAMETERS.clone(), 8)
@@ -421,6 +421,29 @@ fn dispatch_window() {
     }
 }
 
+
+pub fn position_help(function: &str) -> String {
+    format!("\
+    \n    -p, --position PARAMETER    - {function} window according to PARAMETER\
+    \n        PARAMETERS:\
+    \n            l  | left             to the left center position\
+    \n            r  | right            to the right center position\
+    \n            t  | top              to the top center position\
+    \n            b  | bottom           to the bottom center position\
+    \n            tl | top-left         to the top-left corner\
+    \n            tr | top-right        to the top-right corner\
+    \n            bl | bottom-left      to the bottom-left corner\
+    \n            br | bottom-right     to the bottom-right corner\
+    \n            cursor                to the cursor position\
+    \n            center                to the center\
+    \n            close                 to the closest corner from cursor\
+    \n            far                   to the farthest corner from cursor\
+    \n            opposite              to the mirror of cursor position\
+    \n            random                to the random position on screen\
+    ")
+}
+
+
 pub fn main_help(purpose: &str) {
     let mut binary = "";
     let mut executable = "";
@@ -432,11 +455,10 @@ pub fn main_help(purpose: &str) {
             function = "open";
             binary = "hfopen";
             executable = "\"EXECUTABLE\"";
-            open_parameters = " \
-            \n\
-            \n    -t | --tiled                               - open window tiled\
-            \n    -o | --origin-size                         - let program open window with specific size and then resize it.\
-            \n        Recommended when size is predefined via config or console arguments\n";
+            open_parameters = "\
+            \n    -t, --tiled                 - open window tiled\
+            \n    -o, --origin-size           - let program open window with specific size and then resize it.\
+            \n        Recommended when size is predefined via config or console arguments";
         },
         "togglefloating" => {
             binary = "hftogglefloating";
@@ -455,33 +477,19 @@ pub fn main_help(purpose: &str) {
     \n\
     \nARGUMENTS:\
     \n\
-    \n    -h               | --help                  - show this message\
+    \n    -h, --help                  - show this message\
     {open_parameters}\
-    \n    -d               | --default-size          - resize window according to config parameter `default_size`\
-    \n    -c PATH          | --config PATH           - define PATH for config\
-    \n    -s SIZE_XxSIZE_Y | --size SIZE_XxSIZE_Y    - set window size by x axis to SIZE_X, by y axis to SIZE_Y\
-    \n    -m POS_XxPOS_Y   | --move POS_XxPOS_Y      - set window {function} position by x axis to POS_X, by y axis to POS_Y\
-    \n    -p PARAMETER     | --position PARAMETER    - {function} window according to PARAMETER\
-    \n        PARAMETERS:\
-    \n            cursor             - at the cursor position\
-    \n            center             - at the center\
-    \n            close              - at the closest corner from cursor\
-    \n            far                - at the farthest corner from cursor\
-    \n            opposite           - at the mirror of cursor position\
-    \n            random             - at the random position on screen\
-    \n            l  | left          - at the left center position\
-    \n            r  | right         - at the right center position\
-    \n            t  | top           - at the top center position\
-    \n            b  | bottom        - at the bottom center position\
-    \n            tl | top-left      - at the top-left corner\
-    \n            tr | top-right     - at the top-right corner\
-    \n            bl | bottom-left   - at the bottom-left corner\
-    \n            br | bottom-right  - at the bottom-right corner\
+    \n    -d, --default-size          - resize window according to config parameter `default_size`\
+    \n    -c, --config PATH           - define PATH for config\
+    \n    -s, --size SIZE_XxSIZE_Y    - set window size by x axis to SIZE_X, by y axis to SIZE_Y\
+    \n    -m, --move POS_XxPOS_Y      - set window {function} position by x axis to POS_X, by y axis to POS_Y\
+    {}\
     \n\
     \nDEFAULT CONFIG PATH:\
     \n\
     \n    `$HOME{}`
     ",
+    position_help(function),
     XDG_PATH.as_str()
     );
     
@@ -496,6 +504,7 @@ pub fn change_window_state(purpose: &str) {
     if ARGS.len() < 2 && purpose == "open" {
         main_help(purpose);
     }
+    
 
     for (i, arg) in ARGS[1..ARGS.len()].iter().enumerate() {
         match arg.as_str() {
@@ -507,23 +516,20 @@ pub fn change_window_state(purpose: &str) {
             "-o" | "--origin-size"  => PARAMETERS.write().unwrap().origin_size = true,
             "-s" | "--size"         => {
                 let size_list = ARGS[i + 2].split("x").collect::<Vec<&str>>();
+                let list =[("x", size_list[0]), ("y", size_list[1])];
                 PARAMETERS.write().unwrap().origin_size = true;
 
-                SIZE_PARAMETERS.write().unwrap().insert("define_size_x".to_string(), 1);
-                SIZE_PARAMETERS.write().unwrap().insert("define_size_y".to_string(), 1);
-
-                SIZE_PARAMETERS.write().unwrap().insert("x".to_string(), size_list[0].parse::<u32>().unwrap() as i16);
-                SIZE_PARAMETERS.write().unwrap().insert("y".to_string(), size_list[1].parse::<u32>().unwrap() as i16);
-                
+                for i in list {
+                    SIZE_PARAMETERS.write().unwrap().insert(i.0.to_string(), i.1.parse::<u32>().unwrap() as i16);
+                }
             },
             "-m" | "--move"         => {
                 let position_list = ARGS[i + 2].split("x").collect::<Vec<&str>>();
+                let list = [("x", position_list[0]), ("y", position_list[1])];
 
-                POSITION_PARAMETERS.write().unwrap().insert("define_position_x".to_string(), 1);
-                POSITION_PARAMETERS.write().unwrap().insert("define_position_y".to_string(), 1);
-                
-                POSITION_PARAMETERS.write().unwrap().insert("x".to_string(), position_list[0].parse::<i16>().unwrap());
-                POSITION_PARAMETERS.write().unwrap().insert("y".to_string(), position_list[1].parse::<i16>().unwrap());
+                for i in list {
+                    POSITION_PARAMETERS.write().unwrap().insert(i.0.to_string(), i.1.parse::<i16>().unwrap());
+                }
             },
             _                       => continue,
         };

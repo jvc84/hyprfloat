@@ -18,7 +18,8 @@ use hyprfloat::{
     PARAMETERS,
     notify_error,
     window_position,
-    config_data
+    config_data,
+    position_help
 };
 
 
@@ -26,21 +27,20 @@ fn position_by_direction(direction: &str, axis: &str) -> i16 {
     let cli = CLIENT_DATA.read().unwrap();
     let cli_axis = cli.axis_data.get(axis).unwrap();
     let mut output = cli_axis.window_pos;
-    let mut directions: Vec<&str> = vec![];
-
-    match axis {
-        "x" => directions = vec!["l", "r"],
-        "y" => directions = vec!["u", "d"],
+    
+    let directions: Vec<&str> = match axis {
+        "x" =>  vec!["l", "r"],
+        "y" =>  vec!["u", "d"],
          _  => {
-            notify_error("No such axis");
+            notify_error(format!("No such axis: {axis}").as_str());
             exit(0x0100)
         }
-    }
-
+    };
+    
     if direction == directions[0] {
-        output =  cli_axis.monitor_min_point + CONFIG_DATA.read().unwrap().axis_data.get(axis).unwrap().padding_min;
+        output = cli_axis.monitor_min_point + CONFIG_DATA.read().unwrap().axis_data.get(axis).unwrap().padding_min;
     } else if direction == directions[1] {
-        output = COUNT_DATA.read().unwrap().get(axis).unwrap().max_pos;
+        output = COUNT_DATA.read().unwrap().get(axis).unwrap().max_position;
     }
 
     output
@@ -80,24 +80,9 @@ fn movewindow_help() {
     \n\
     \nARGUMENTS:\
     \n\
-    \n    -h           | --help                  - show this message\
-    \n    -c PATH      | --config PATH           - define PATH for config\
-    \n    -p PARAMETER | --position PARAMETER    - move window according to PARAMETER\
-    \n        PARAMETERS:\
-    \n            cursor             - at the cursor position\
-    \n            center             - at the center\
-    \n            close              - at the closest corner from cursor\
-    \n            far                - at the farthest corner from cursor\
-    \n            opposite           - at the mirror of cursor position\
-    \n            random             - at the random position on screen\
-    \n            l  | left          - at the left center position\
-    \n            r  | right         - at the right center position\
-    \n            t  | top           - at the top center position\
-    \n            b  | bottom        - at the bottom center position\
-    \n            tl | top-left      - at the top-left corner\
-    \n            tr | top-right     - at the top-right corner\
-    \n            bl | bottom-left   - at the bottom-left corner\
-    \n            br | bottom-right  - at the bottom-right corner\
+    \n    -h           | --help                      - show this message\
+    \n    -c PATH      | --config PATH               - define PATH for config\
+    {}\
     \n\
     \nDIRECTIONS:\
     \n\
@@ -109,7 +94,8 @@ fn movewindow_help() {
     \nDEFAULT CONFIG PATH:\
     \n\
     \n    `$HOME{}`
-    ",
+    ", 
+    position_help("move"),
     XDG_PATH.as_str()
     );
         
@@ -122,11 +108,11 @@ fn main() {
 
     for (i, arg) in args.clone()[1..args.len()].iter().enumerate() {
         match arg.as_str() {
-            "--help" => movewindow_help(),
-            "--config" | "-c" => {
+            "-h" | "--help" => movewindow_help(),
+            "-c" | "--config" => {
                 *CONFIG_DATA.write().unwrap() = config_data(args[i + 2].clone());
             },
-            "--position" | "-p" => {
+            "-p" | "--position" => {
                 PARAMETERS.write().unwrap().dispatcher_var = args[i + 2].clone();
                 PARAMETERS.write().unwrap().count_system = "position".to_string();
             },
