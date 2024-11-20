@@ -1,12 +1,18 @@
 <div align="center">
-<h1> <img src="https://cyber.dabamos.de/88x31/blink-0.gif" width="88" height="31"/>   HYPRFLOAT    <img src="https://cyber.dabamos.de/88x31/blink-0.gif" width="88" height="31"/> </h1>
+  <h1> 
+    <img src="https://cyber.dabamos.de/88x31/blink-0.gif" width="88" height="31"/>   
+    HYPRFLOAT    
+    <img src="https://cyber.dabamos.de/88x31/blink-0.gif" width="88" height="31"/> 
+  </h1>
+  
+  <h2> Improve your experience with floating windows! </h2>
 </div>
-
-## Improve your experience with floating windows!
 
 Supports `Hyprland >= 42.0`
 
-# Demonstration
+<div align="center">
+<h1> Demonstration and Examples </h1>
+</div>
 
 <details> 
   <summary>hfopen</summary>
@@ -91,14 +97,17 @@ bind = Super Shift, Z, exec, hfmovewindow -p far
 
 </details>
 
-
-# Requirements
+<div align="center">
+<h1> Requirements </h1>
+</div>
 ```
 rust/rustup
 sudo
 ```
+<div align="center">
+  <h1> Installation </h1>
+</div>
 
-# Installation
 ```bash
 git clone https://github.com/jvc84/hyprfloat
 cd hyprfloat
