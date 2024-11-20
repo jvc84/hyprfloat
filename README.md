@@ -4,8 +4,10 @@ Improve your experience with floating windows!
 
 Supports Hyprland `>=42.0`
 
+# Demonstration
+
  <details> 
-  <summary>Demonstration and examples</summary>
+  <summary>Demo and examples</summary>
 
 # hfopen
 
