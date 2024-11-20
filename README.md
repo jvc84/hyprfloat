@@ -1,5 +1,6 @@
-# <img src="https://cyber.dabamos.de/88x31/blink-0.gif" width="88" height="31"/>   Hyprfloat    <img src="https://cyber.dabamos.de/88x31/blink-0.gif" width="88" height="31"/>
-
+<div align="center">
+<h1> <img src="https://cyber.dabamos.de/88x31/blink-0.gif" width="88" height="31"/>   HYPRFLOAT    <img src="https://cyber.dabamos.de/88x31/blink-0.gif" width="88" height="31"/> </h1>
+</div>dev>
 Improve your experience with floating windows!
 
 Supports Hyprland `>=42.0`
