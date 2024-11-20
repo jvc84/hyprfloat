@@ -99,6 +99,23 @@ bind = Super Shift, Z, exec, hfmovewindow -p far
 ```
 </details>
 
+# Requirements 
+
+```
+rust/rustup
+sudo
+```
+
+# Installation 
+
+
+```bash
+git clone https://github.com/jvc84/hyprfloat
+cd hyprfloat
+bash install.sh
+```
+
+
 # Information
 
 You can get this information by using flag `--help` or `-h` with any binary
@@ -234,29 +251,5 @@ DIRECTIONS:
 ```
 
 </details>
-
-
-# Requirements 
-
-```
-rust/rustup
-sudo
-```
-
-# Installation 
-
-
-```bash
-git clone https://github.com/jvc84/hyprfloat
-cd hyprfloat
-bash install.sh
-```
-
-
-
-
-
-
-
 
 
