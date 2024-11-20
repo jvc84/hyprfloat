@@ -88,6 +88,7 @@ ARGUMENTS:
 
 <details> 
   <summary>hfresizeactive</summary>
+  
 # hfresizeactive
 
 USAGE:    `hfresizeactive [ARGUMENTS] RESIZE_X RESIZE_Y`
@@ -106,6 +107,9 @@ RESIZE_Y       - resize window by y axis on RESIZE_Y pixels according to config 
 
 <details> 
   <summary>hfmovewindow</summary>
+
+# hfmovewindow
+
   USAGE:    `hfmovewindow [ARGUMENTS] [DIRECTION]`
 
 ARGUMENTS:
