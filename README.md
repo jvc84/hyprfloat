@@ -64,10 +64,15 @@ https://github.com/user-attachments/assets/aa839f2b-d0c5-4156-97d8-ae394889c62e
 
 `hyprland.conf`:
 ```
-bind = Super SHIFT, Left , exec, hfmovewindow l    
-bind = Super SHIFT, Down , exec, hfmovewindow d   
-bind = Super SHIFT, Up   , exec, hfmovewindow u   
-bind = Super SHIFT, Right, exec, hfmovewindow r   
+bind = Super Shift, Left , exec, hfmovewindow l    
+bind = Super Shift, Down , exec, hfmovewindow d   
+bind = Super Shift, Up   , exec, hfmovewindow u   
+bind = Super Shift, Right, exec, hfmovewindow r   
+```
+```
+bind = Super Shift, X, exec, hfmovewindow -p center
+bind = Super Shift, C, exec, hfmovewindow -p cursor
+bind = Super Shift, Z, exec, hfmovewindow -p far 
 ```
 
 </details>
