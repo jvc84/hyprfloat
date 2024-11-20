@@ -17,7 +17,7 @@ https://github.com/user-attachments/assets/df9a8e61-21b2-4da5-9ee4-b65b056d487f
 
 
 
-**`hyprland.conf`**:
+# `hyprland.conf`:
 ```
 bind = Super Shift, Return, exec, hfopen -o -s 600x450 -p cursor kitty
 bind = Super Shift, R, exec, hfopen -o -s 700x650 -p center "kitty ranger"
