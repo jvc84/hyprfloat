@@ -6,8 +6,8 @@ Supports Hyprland `>=42.0`
 
 # Demonstration
 
- <details> 
-  <summary>Demo and examples</summary>
+<details> 
+  <summary>hfopen</summary>
 
 # hfopen
 
@@ -22,7 +22,11 @@ https://github.com/user-attachments/assets/df9a8e61-21b2-4da5-9ee4-b65b056d487f
 bind = Super Shift, Return, exec, hfopen -o -s 600x450 -p cursor kitty
 bind = Super Shift, R, exec, hfopen -o -s 700x650 -p center "kitty ranger"
 ```
+</details>
 
+<details> 
+  <summary>hftogglefloating</summary>
+  
 # hftogglefloating
 
 
@@ -36,7 +40,11 @@ https://github.com/user-attachments/assets/ee18e752-b0b0-4248-b1af-e6c0b4ae8098
 bind = Super Shift, Space, exec, hftogglefloating -p center
 bind = Super, Space, exec, hftogglefloating -d -p cursor
 ```
+</details>
 
+<details> 
+  <summary>hfresizeactive</summary>
+  
 # hfresizeactive
 
 
@@ -53,7 +61,11 @@ bind = Super Alt, Up   , exec, hfresizeactive   0    -100
 bind = Super Alt, Right, exec, hfresizeactive   100   0     
 
 ```
+</details>
 
+<details> 
+  <summary>hfmovewindow</summary>
+  
 # hfmovewindow
 
 
