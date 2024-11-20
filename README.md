@@ -9,7 +9,11 @@ Supports Hyprland `>=42.0`
 
 # hfopen
 
-https://github.com/user-attachments/assets/e70fcc55-a50f-483f-a1ec-5589ac08de68
+
+
+https://github.com/user-attachments/assets/df9a8e61-21b2-4da5-9ee4-b65b056d487f
+
+
 
 `hyprland.conf`:
 ```
@@ -19,7 +23,11 @@ bind = Super Shift, R, exec, hfopen -o -s 700x650 -p center "kitty ranger"
 
 # hftogglefloating
 
-https://github.com/user-attachments/assets/6816a7fa-ec8d-48fa-9fc5-b21af640e069
+
+
+https://github.com/user-attachments/assets/ee18e752-b0b0-4248-b1af-e6c0b4ae8098
+
+
 
 `hyprland.conf`:
 ```
@@ -28,6 +36,12 @@ bind = Super, Space, exec, hftogglefloating -d -p cursor
 ```
 
 # hfresizeactive
+
+
+
+https://github.com/user-attachments/assets/554d927b-b9d3-4c7a-bb47-773bae5ae722
+
+
 
 `hyprland.conf`:
 ```
@@ -39,6 +53,12 @@ bind = Super Alt, Right, exec, hfresizeactive   100   0
 ```
 
 # hfmovewindow
+
+
+
+https://github.com/user-attachments/assets/aa839f2b-d0c5-4156-97d8-ae394889c62e
+
+
 
 `hyprland.conf`:
 ```
