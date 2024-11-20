@@ -11,7 +11,7 @@
 Supports `Hyprland >= 42.0`
 
 
-# Demonstration and Examples 
+# Demonstration 
 
 
 <details> 
