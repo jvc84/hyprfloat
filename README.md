@@ -202,7 +202,7 @@ RESIZE_Y       - resize window by y axis on RESIZE_Y pixels according to config 
 
 ARGUMENTS:
 ```
-    -c PATH      | --config PATH               - define PATH for config
+    -c, --config PATH           - define PATH for config
     -p, --position PARAMETER    - move window according to PARAMETER
         PARAMETERS:
             l, left              to the left center position
