@@ -35,26 +35,26 @@ pub use data::*;
 pub struct Parameters {
     pub make_float: bool,
     pub toggle_float: bool,
-    pub resize: bool,
+    pub default_size: bool,
     pub resize_x: bool,
     pub resize_y: bool,
     pub tiled: bool,
     pub origin_size: bool,
     pub count_system: String,
-    pub dispatcher_var: String,
+    pub dispatcher_arg: String,
 }
 
 pub fn get_variables() -> Parameters {
     Parameters {
         make_float: false,
         toggle_float: false,
-        resize: false,
+        default_size: false,
         resize_x: false,
         resize_y: false,
         tiled: false,
         origin_size: false,
         count_system: "origin".to_string(),
-        dispatcher_var: "any".to_string(),
+        dispatcher_arg: "any".to_string(),
     }
 }
 
@@ -96,7 +96,7 @@ fn get_parameter(axis: &str, arg: Arc<RwLock<HashMap<String, i16>>>, default_val
 fn compare_size_parameters(axis: &str) -> i16 {
     let binding = SIZE_PARAMETERS.read().unwrap();
     let mut output = get_parameter(
-        format!("define_config_size_{}", axis).as_str(),
+        format!("config_size_{}", axis).as_str(),
         SIZE_PARAMETERS.clone(), 
         CLIENT_DATA.read().unwrap().axis_data.get(axis).unwrap().window_size.clone()
     );
@@ -134,8 +134,8 @@ fn size(global_class: &str) {
             .contains(&&value.clone()) {
             let param_vec = &class_section.as_table().unwrap()[&value];
             
-            SIZE_PARAMETERS.write().unwrap().insert("define_config_size_y".to_string(), param_vec[1].as_integer().unwrap().clone() as u16 as i16);
-            SIZE_PARAMETERS.write().unwrap().insert("define_config_size_x".to_string(), param_vec[0].as_integer().unwrap().clone() as u16 as i16);
+            SIZE_PARAMETERS.write().unwrap().insert("config_size_y".to_string(), param_vec[1].as_integer().unwrap().clone() as u16 as i16);
+            SIZE_PARAMETERS.write().unwrap().insert("config_size_x".to_string(), param_vec[0].as_integer().unwrap().clone() as u16 as i16);
 
         } else if class_section
             .as_table()
@@ -146,8 +146,8 @@ fn size(global_class: &str) {
 
             let param_vec = &class_section.as_table().unwrap()[&"monitor_any".to_string()];
 
-            SIZE_PARAMETERS.write().unwrap().insert("define_config_size_x".to_string(), param_vec[0].as_integer().unwrap().clone() as u16 as i16);
-            SIZE_PARAMETERS.write().unwrap().insert("define_config_size_y".to_string(), param_vec[1].as_integer().unwrap().clone() as u16 as i16);
+            SIZE_PARAMETERS.write().unwrap().insert("config_size_x".to_string(), param_vec[0].as_integer().unwrap().clone() as u16 as i16);
+            SIZE_PARAMETERS.write().unwrap().insert("config_size_y".to_string(), param_vec[1].as_integer().unwrap().clone() as u16 as i16);
         }
     }
 
@@ -173,17 +173,19 @@ pub fn position(axis: &str) -> Result<i16, String> {
     let cli = CLIENT_DATA.read().unwrap().clone();
     let cli_axis = cli.axis_data.get(axis).unwrap().clone();
     let params = PARAMETERS.read().unwrap().clone();
+    let size_params = SIZE_PARAMETERS.read().unwrap();
     let system = params.count_system.as_str();
-    let param = params.dispatcher_var.as_str();
-
-    let size_offset = get_parameter(axis, SIZE_PARAMETERS.clone(), 0) / -2;
+    let dispatcher_arg = params.dispatcher_arg.as_str();
+    
     let mut offset = -4;
 
-    if params.origin_size == false {
+    if size_params.contains_key(axis) {
+        offset = size_params.get(axis).unwrap().clone() / -2;
+    } else if params.default_size == true {
+        offset = conf_axis.default_size / -2
+    } else if params.origin_size == false {
         offset = ((COUNT_DATA.read().unwrap().get("x").unwrap().monitor_resolution as f32 / -12f32) * 1.6).round() as i16;
-    } else if size_offset != 0 {
-        offset = size_offset;
-    }
+    }  
 
     
     let mut min_point = 0;
@@ -204,7 +206,7 @@ pub fn position(axis: &str) -> Result<i16, String> {
         offset = window_size / -2
     }
 
-    let mut position : Result<i16, String> = match param {
+    let mut position : Result<i16, String> = match dispatcher_arg {
         "l" | "left" => {
             let mut output = min_point;
             if axis == "y" {
@@ -219,7 +221,7 @@ pub fn position(axis: &str) -> Result<i16, String> {
             }
             Ok(output)
         },
-        "t" | "top" =>  {
+        "t" | "top" => {
             let mut output = min_point;
             if axis == "x" {
                 output = (max_point + min_point + offset * 2) / 2
@@ -227,6 +229,7 @@ pub fn position(axis: &str) -> Result<i16, String> {
             Ok(output)
         },
         "b" | "bottom" => {
+            notify_error("b");
             let mut output = max_point + offset * 2;
             if axis == "x" {
                 output = (max_point + min_point + offset * 2) / 2
@@ -291,17 +294,17 @@ pub fn position(axis: &str) -> Result<i16, String> {
     match system {
         "position" => {
             let mut output = position?;
-            if CONFIG_DATA.read().unwrap().detect_padding == true && param != "center" && param != "any" {
+            if CONFIG_DATA.read().unwrap().detect_padding == true && dispatcher_arg != "center" {
                 if output <= min_point {
                     output = min_point
                 } else if output + window_size >= max_point {
                     output = max_point - window_size
-                }
+                } 
             }
             position = Ok(get_parameter(axis, POSITION_PARAMETERS.clone(), output) + cli_axis.monitor_min_point);
         },
         "origin" => {
-            if   POSITION_PARAMETERS.read().unwrap().contains_key(axis) {
+            if  POSITION_PARAMETERS.read().unwrap().contains_key(axis) {
                 if SIZE_PARAMETERS.read().unwrap().contains_key(axis) {
                     position = Ok(
                         POSITION_PARAMETERS.read().unwrap().get(axis).unwrap().clone() 
@@ -340,21 +343,22 @@ pub fn window_position() -> DispatchType<'static> {
 pub fn dispatch_client() {
     update_data();
     let cli = CLIENT_DATA.read().unwrap().clone();
+    let conf = CONFIG_DATA.read().unwrap().clone();
     let params = PARAMETERS.read().unwrap();
 
-    if params.make_float == true && cli.floating == false && params.tiled == false ||
-        params.toggle_float == true ||
-        params.tiled == true && cli.floating == true {
+    if (params.make_float == true && cli.floating == false && params.tiled == false) || 
+        (params.tiled == true && cli.floating == true) ||
+        params.toggle_float == true {
         let _ = Dispatch::call(ToggleFloating(None));
     }
 
     if Client::get_active().unwrap().unwrap().floating == false { exit(0x0100) }
     
-    if params.resize == true {
+    if params.default_size == true {
         let _ = Dispatch::call(ResizeActive(
             Exact(
-                CONFIG_DATA.read().unwrap().axis_data.get("x").unwrap().default_size,
-                CONFIG_DATA.read().unwrap().axis_data.get("y").unwrap().default_size,
+                conf.axis_data.get("x").unwrap().default_size,
+                conf.axis_data.get("y").unwrap().default_size,
             )
         ));
     } else { size("") }
@@ -365,11 +369,18 @@ pub fn dispatch_client() {
 
 
 fn get_origin_size(axis: &str) -> i16 {
-    if SIZE_PARAMETERS.read().unwrap().contains_key(axis)  {
-        SIZE_PARAMETERS.read().unwrap().get(axis).unwrap().clone()
-    } else {
-        get_parameter(format!("define_config_size_{}", axis).as_str(), SIZE_PARAMETERS.clone(), 8)
+    let size_params =  SIZE_PARAMETERS.read().unwrap();
 
+    if size_params.contains_key(axis) {
+        size_params.get(axis).unwrap().clone()
+    } else if PARAMETERS.read().unwrap().default_size == true {
+        CONFIG_DATA.read().unwrap().axis_data.get(axis).unwrap().default_size
+    } else {
+        get_parameter(
+            format!("config_size_{}", axis).as_str(),
+            SIZE_PARAMETERS.clone(),
+            8
+        )
     }
 }
 
@@ -393,7 +404,7 @@ fn dispatch_window() {
             empty_client()
         ).address;
 
-    if params.make_float == true && parse_fullscreen(Client::get_active().unwrap().unwrap_or(empty_client()).fullscreen) {
+    if params.make_float == true {
         let mut event = hyprland::event_listener::EventListener::new();
 
         event.add_window_open_handler(
@@ -426,23 +437,31 @@ pub fn position_help(function: &str) -> String {
     format!("\
     \n    -p, --position PARAMETER    - {function} window according to PARAMETER\
     \n        PARAMETERS:\
-    \n            l  | left             to the left center position\
-    \n            r  | right            to the right center position\
-    \n            t  | top              to the top center position\
-    \n            b  | bottom           to the bottom center position\
-    \n            tl | top-left         to the top-left corner\
-    \n            tr | top-right        to the top-right corner\
-    \n            bl | bottom-left      to the bottom-left corner\
-    \n            br | bottom-right     to the bottom-right corner\
-    \n            cursor                to the cursor position\
-    \n            center                to the center\
-    \n            close                 to the closest corner from cursor\
-    \n            far                   to the farthest corner from cursor\
-    \n            opposite              to the mirror of cursor position\
-    \n            random                to the random position on screen\
+    \n            l, left              to the left center position\
+    \n            r, right             to the right center position\
+    \n            t, top               to the top center position\
+    \n            b, bottom            to the bottom center position\
+    \n            tl, top-left         to the top-left corner\
+    \n            tr, top-right        to the top-right corner\
+    \n            bl, bottom-left      to the bottom-left corner\
+    \n            br, bottom-right     to the bottom-right corner\
+    \n            cursor               to the cursor position\
+    \n            center               to the center\
+    \n            close                to the closest corner from cursor\
+    \n            far                  to the farthest corner from cursor\
+    \n            opposite             to the mirror of cursor position\
+    \n            random               to the random position on screen\
     ")
 }
 
+
+pub fn common_help() -> String {
+    "\
+    \n    -h, --help                  - show this message\
+    \n    -c, --config PATH           - define PATH for config\
+    \n    -f, --force                 - do not detect padding, even if `detect_padding` option in config equals `true`\
+    ".to_string()
+}
 
 pub fn main_help(purpose: &str) {
     let mut binary = "";
@@ -458,13 +477,13 @@ pub fn main_help(purpose: &str) {
             open_parameters = "\
             \n    -t, --tiled                 - open window tiled\
             \n    -o, --origin-size           - let program open window with specific size and then resize it.\
-            \n        Recommended when size is predefined via config or console arguments";
+            \n        Recommended when size is predefined via config";
         },
         "togglefloating" => {
             binary = "hftogglefloating";
             function = "move";
         },
-        _  => {
+        _     => {
             notify_error(format!("No such purpose: {}", purpose).as_str());
             exit(0x0100)
         }    
@@ -477,20 +496,21 @@ pub fn main_help(purpose: &str) {
     \n\
     \nARGUMENTS:\
     \n\
-    \n    -h, --help                  - show this message\
-    {open_parameters}\
+    {}\
+    {}\
     \n    -d, --default-size          - resize window according to config parameter `default_size`\
-    \n    -c, --config PATH           - define PATH for config\
+    \n    -f, --force                 - do not detect padding, even if `detect_padding` option in config equals `true`\
     \n    -s, --size SIZE_XxSIZE_Y    - set window size by x axis to SIZE_X, by y axis to SIZE_Y\
     \n    -m, --move POS_XxPOS_Y      - set window {function} position by x axis to POS_X, by y axis to POS_Y\
-    {}\
-    \n\
+    {open_parameters}\
     \nDEFAULT CONFIG PATH:\
     \n\
-    \n    `$HOME{}`
+    \n    `$HOME{}`\
+    \n\
     ",
-    position_help(function),
-    XDG_PATH.as_str()
+         common_help(),
+         position_help(function),
+         XDG_PATH.as_str()
     );
     
     exit(0x0100)
@@ -505,15 +525,18 @@ pub fn change_window_state(purpose: &str) {
         main_help(purpose);
     }
     
-
     for (i, arg) in ARGS[1..ARGS.len()].iter().enumerate() {
         match arg.as_str() {
             "-h" | "--help"         => main_help(purpose),
             "-c" | "--config"       => *CONFIG_DATA.write().unwrap() = config_data(ARGS[i + 2].to_string()),
-            "-p" | "--position"     => PARAMETERS.write().unwrap().dispatcher_var = ARGS[i + 2].to_string(),
-            "-d" | "--default-size" => PARAMETERS.write().unwrap().resize = true,
+            "-p" | "--position"     => PARAMETERS.write().unwrap().dispatcher_arg = ARGS[i + 2].to_string(),
+            "-d" | "--default-size" => {
+                PARAMETERS.write().unwrap().default_size = true;
+                PARAMETERS.write().unwrap().origin_size = true;
+            },
             "-t" | "--tiled"        => PARAMETERS.write().unwrap().tiled = true,
             "-o" | "--origin-size"  => PARAMETERS.write().unwrap().origin_size = true,
+            "-f" | "--force"        => CONFIG_DATA.write().unwrap().detect_padding = false,
             "-s" | "--size"         => {
                 let size_list = ARGS[i + 2].split("x").collect::<Vec<&str>>();
                 let list =[("x", size_list[0]), ("y", size_list[1])];
