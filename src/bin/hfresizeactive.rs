@@ -21,7 +21,8 @@ use hyprfloat::{
     CLIENT_DATA,
     get_table,
     notify_error,
-    config_data
+    config_data,
+    common_help
 };
 
 
@@ -38,13 +39,12 @@ fn count_move_resize(axis: &str, global_resize: i16) -> (i16, i16) {
     let cli_axis = cli.axis_data.get(axis).unwrap();
     let conf = CONFIG_DATA.read().unwrap().clone();
     let conf_axis =conf.axis_data.get(axis).unwrap();
-
-    let mut minimal_size: i16 = 20;
-
+    
     let class = cli.class;
     let table = get_table("windows", CONFIG_FILE.clone().as_str());
     let list: toml::Table = table.as_table().unwrap().clone();
-
+    let mut minimal_size: i16 = 20;
+    
     if list.keys().collect::<Vec<_>>().contains(&&class.clone()) {
         let class_section = list[&class].clone();
         let value = "minimal_size".to_string();
@@ -88,14 +88,11 @@ fn count_move_resize(axis: &str, global_resize: i16) -> (i16, i16) {
     let mut margin = 0;
     if conf.stick_to_borders == true {
         margin = conf_axis.margin;
-
         if margin < 2 {
             margin = 2
         }
     }
     
-    let working_area = padding_max - padding_min;
-
     if  cli.floating == true && conf.detect_padding == true &&
         conf.invert_resize_in_stick_mode == true && conf.resize_through_borders == false &&
         conf.stick_to_borders == true &&
@@ -103,6 +100,12 @@ fn count_move_resize(axis: &str, global_resize: i16) -> (i16, i16) {
         ((window_pos + window_size <= padding_max) && window_pos >= padding_min) {
         resize = -global_resize
     }
+    
+    if margin > resize {
+        margin = resize
+    }
+    
+    let working_area = padding_max - padding_min - margin;
     
     if ( window_start_size <= minimal_size || window_start_size + resize <= minimal_size) && resize < 0 {
         resize = -window_start_size + minimal_size;
@@ -128,7 +131,7 @@ fn count_move_resize(axis: &str, global_resize: i16) -> (i16, i16) {
             ((window_pos <= padding_min && window_pos + window_size >= padding_max) &&
                 border_position_max - border_position_min < padding_max - padding_min )
         {
-            let distance_min  = window_start_pos - padding_min;
+            let distance_min = window_start_pos - padding_min;
             let distance_max = padding_max - (window_start_pos + window_start_size);
 
             if distance_min <= distance_max {
@@ -140,20 +143,20 @@ fn count_move_resize(axis: &str, global_resize: i16) -> (i16, i16) {
     }
 
     if conf.detect_padding == true && conf.resize_through_borders == false {
-        if  window_size  >= working_area && window_start_size <= working_area
+        if  window_size >= working_area && 
+            ( window_start_size <= working_area || window_start_size <= padding_max - padding_min)
             && EXACT.read().unwrap().clone() == false {
-            if window_start_pos <= padding_min {
-                window_size = (padding_max - padding_min) - margin;
-                window_pos = window_start_pos;
-                
-            } else if window_start_pos + window_start_size >= padding_max {
-                window_size = (padding_max - padding_min) - margin;
-                window_pos = padding_min + margin;
+
+            window_size = working_area;
             
+            if window_start_pos <= padding_min {
+                window_pos = window_start_pos;
+            } else if window_start_pos + window_start_size >= padding_max {
+                window_pos = padding_min + margin;
             } else {
                 window_pos = padding_min + margin / 2;
-                window_size = padding_max - padding_min - margin;
             }
+            
         } else {
             let distance_min = border_position_min - padding_min;
             let distance_max = padding_max - border_position_max;
@@ -168,10 +171,10 @@ fn count_move_resize(axis: &str, global_resize: i16) -> (i16, i16) {
                 } 
             } else{
                 if conf.stick_to_borders == true {
-                    if window_pos + window_size  >= padding_max  || window_start_pos + window_start_size >= padding_max {
+                    if window_pos + window_size  >= padding_max || window_start_pos + window_start_size >= padding_max {
                         window_pos = padding_max - window_size;
                     }
-                } else  if window_pos + window_size  >= padding_max {
+                } else if window_pos + window_size >= padding_max {
                     window_pos = padding_max - window_size;
                 }
             }
@@ -190,11 +193,9 @@ fn resizeactive_help() {
     \n\
     \nARGUMENTS:\
     \n\
-    \n    -h, --help          - show this message\
-    \n    -c, --config PATH    - define PATH for config\
-    \n    -e, --exact          - make size of floating window exactly RESIZE_X pixels on x axis, RESIZE_Y pixels on y axis\
-    \n    -f, --force          - do not detect padding, even if `detect_padding` option in config equals `true`\
-    \n    -n, --no-invert      - do not invert resize in stick mode, even if `invert_resize_in_stick_mode` option in config equals `true`\
+    {}\
+    \n    -e, --exact                 - make size of floating window exactly RESIZE_X pixels on x axis, RESIZE_Y pixels on y axis\
+    \n    -n, --no-invert             - do not invert resize in stick mode, even if `invert_resize_in_stick_mode` option in config equals `true`\
     \n\
     \nRESIZE_X       - resize window by x axis on RESIZE_X pixels according to config parameters\
     \nRESIZE_Y       - resize window by y axis on RESIZE_Y pixels according to config parameters\
@@ -203,7 +204,8 @@ fn resizeactive_help() {
     \n\
     \n    `$HOME{}`
     ",
-    XDG_PATH.as_str()
+             common_help(),
+             XDG_PATH.as_str()
     );
 
     exit(0x0100);
@@ -274,7 +276,8 @@ fn main() {
     if cli.floating == true {
         let (position_x, resize_x) = count_move_resize("x", resize_x);
         let (position_y, resize_y) = count_move_resize("y", resize_y);
-
+        
+        
         let _ =Dispatch::call(
             DispatchType::MoveActive(
                 Exact(position_x, position_y),
