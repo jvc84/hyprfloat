@@ -19,7 +19,8 @@ use hyprfloat::{
     notify_error,
     window_position,
     config_data,
-    position_help
+    position_help,
+    common_help
 };
 
 
@@ -28,18 +29,18 @@ fn position_by_direction(direction: &str, axis: &str) -> i16 {
     let cli_axis = cli.axis_data.get(axis).unwrap();
     let mut output = cli_axis.window_pos;
     
-    let directions: Vec<&str> = match axis {
-        "x" =>  vec!["l", "r"],
-        "y" =>  vec!["u", "d"],
+    let directions: (&str, &str) = match axis {
+        "x" => ("l", "r"),
+        "y" => ("u", "d"),
          _  => {
             notify_error(format!("No such axis: {axis}").as_str());
             exit(0x0100)
         }
     };
     
-    if direction == directions[0] {
+    if direction == directions.0 {
         output = cli_axis.monitor_min_point + CONFIG_DATA.read().unwrap().axis_data.get(axis).unwrap().padding_min;
-    } else if direction == directions[1] {
+    } else if direction == directions.1 {
         output = COUNT_DATA.read().unwrap().get(axis).unwrap().max_position;
     }
 
@@ -80,8 +81,7 @@ fn movewindow_help() {
     \n\
     \nARGUMENTS:\
     \n\
-    \n    -h           | --help                      - show this message\
-    \n    -c PATH      | --config PATH               - define PATH for config\
+    {}\
     {}\
     \n\
     \nDIRECTIONS:\
@@ -94,9 +94,10 @@ fn movewindow_help() {
     \nDEFAULT CONFIG PATH:\
     \n\
     \n    `$HOME{}`
-    ", 
-    position_help("move"),
-    XDG_PATH.as_str()
+    ",
+             common_help(),
+             position_help("move"),
+             XDG_PATH.as_str()
     );
         
     exit(0x0100);
@@ -108,15 +109,16 @@ fn main() {
 
     for (i, arg) in args.clone()[1..args.len()].iter().enumerate() {
         match arg.as_str() {
-            "-h" | "--help" => movewindow_help(),
-            "-c" | "--config" => {
+            "-h" | "--help"     => movewindow_help(),
+            "-c" | "--config"   => {
                 *CONFIG_DATA.write().unwrap() = config_data(args[i + 2].clone());
             },
+            "-f" | "--force"    => CONFIG_DATA.write().unwrap().detect_padding = false,
             "-p" | "--position" => {
-                PARAMETERS.write().unwrap().dispatcher_var = args[i + 2].clone();
+                PARAMETERS.write().unwrap().dispatcher_arg = args[i + 2].clone();
                 PARAMETERS.write().unwrap().count_system = "position".to_string();
             },
-            _ => {
+            _                   => {
                 continue;
             }
         }
@@ -124,7 +126,7 @@ fn main() {
 
     let all_directions: Vec<_> = vec!["l", "r", "u", "d"];
 
-    if PARAMETERS.read().unwrap().dispatcher_var != "any" {
+    if PARAMETERS.read().unwrap().dispatcher_arg != "any" {
         let _ = Dispatch::call(window_position());
     } else if args.len() > 1 && 
         all_directions.contains(&args.clone()[args.len() - 1].as_str()) {
