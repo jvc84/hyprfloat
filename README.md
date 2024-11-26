@@ -137,6 +137,7 @@ ARGUMENTS:
         Recommended when size is predefined via config or console arguments
     -d, --default-size          - resize window according to config parameter `default_size`
     -c, --config PATH           - define PATH for config
+    -f, --force                 - do not detect padding, even if `detect_padding` option in config equals `true`
     -s, --size SIZE_XxSIZE_Y    - set window size by x axis to SIZE_X, by y axis to SIZE_Y
     -m, --move POS_XxPOS_Y      - set window open position by x axis to POS_X, by y axis to POS_Y
     -p, --position PARAMETER    - open window according to PARAMETER
@@ -172,6 +173,7 @@ ARGUMENTS:
 ```
     -d, --default-size          - resize window according to config parameter `default_size`
     -c, --config PATH           - define PATH for config
+    -f, --force                 - do not detect padding, even if `detect_padding` option in config equals `true`
     -s, --size SIZE_XxSIZE_Y    - set window size by x axis to SIZE_X, by y axis to SIZE_Y
     -m, --move POS_XxPOS_Y      - set window move position by x axis to POS_X, by y axis to POS_Y
     -p, --position PARAMETER    - move window according to PARAMETER
@@ -205,8 +207,8 @@ USAGE:    `hfresizeactive [ARGUMENTS] RESIZE_X RESIZE_Y`
 ARGUMENTS:
 ```
     -c, --config PATH    - define PATH for config
-    -e, --exact          - make size of floating window exactly RESIZE_X pixels on x axis, RESIZE_Y pixels on y axis
     -f, --force          - do not detect padding, even if `detect_padding` option in config equals `true`
+    -e, --exact          - make size of floating window exactly RESIZE_X pixels on x axis, RESIZE_Y pixels on y axis
     -n, --no-invert      - do not invert resize in stick mode, even if `invert_resize_in_stick_mode` option in config equals `true`
 ```
 ```
@@ -225,6 +227,7 @@ RESIZE_Y       - resize window by y axis on RESIZE_Y pixels according to config 
 ARGUMENTS:
 ```
     -c, --config PATH           - define PATH for config
+    -f, --force                 - do not detect padding, even if `detect_padding` option in config equals `true`
     -p, --position PARAMETER    - move window according to PARAMETER
         PARAMETERS:
             l, left              to the left center position
