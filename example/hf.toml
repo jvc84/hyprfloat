@@ -17,14 +17,9 @@
 
     # [monitors.0]
     # padding = [30,30,30,30]
-    # default_size = [700,600]
     # margin = [2,2]
 
-    # detect_padding = true 
-    # standard_resize = true 
     # stick_to_borders = false
-    # invert_resize_in_stick_mode = true
-    # resize_through_borders = false 
 
 
 [windows]

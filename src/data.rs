@@ -73,14 +73,43 @@ pub struct FromClient {
 
 #[derive(Deserialize, Clone)]
 pub struct PreConfig {
-    pub padding: (i16, i16, i16, i16),
-    pub default_size: (u32, u32),
-    pub margin: (u32, u32),
-    pub detect_padding: bool,
-    pub standard_resize: bool,
-    pub stick_to_borders: bool,
-    pub invert_resize_in_stick_mode: bool,
-    pub resize_through_borders: bool,
+    pub padding: Option<(i16, i16, i16, i16)>,
+    pub default_size: Option<(u32, u32)>,
+    pub margin: Option<(u32, u32)>,
+    pub detect_padding: Option<bool>,
+    pub standard_resize: Option<bool>,
+    pub stick_to_borders: Option<bool>,
+    pub invert_resize_in_stick_mode: Option<bool>,
+    pub resize_through_borders: Option<bool>,
+}
+
+impl PreConfig {
+    fn replace_none_values(&mut self, other: &PreConfig) {
+        if self.padding.is_none() {
+            self.padding = other.padding;
+        }
+        if self.default_size.is_none() {
+            self.default_size = other.default_size;
+        }
+        if self.margin.is_none() {
+            self.margin = other.margin;
+        }
+        if self.detect_padding.is_none() {
+            self.detect_padding = other.detect_padding;
+        }
+        if self.standard_resize.is_none() {
+            self.standard_resize = other.standard_resize;
+        }
+        if self.stick_to_borders.is_none() {
+            self.stick_to_borders = other.stick_to_borders;
+        }
+        if self.invert_resize_in_stick_mode.is_none() {
+            self.invert_resize_in_stick_mode = other.invert_resize_in_stick_mode;
+        }
+        if self.resize_through_borders.is_none() {
+            self.resize_through_borders = other.resize_through_borders;
+        }
+    }
 }
 
 
@@ -152,7 +181,7 @@ pub fn update_data() {
 
 pub fn check_config_file(file: &str) -> String {
     match fs::read_to_string(file).is_ok() {
-        true =>  fs::read_to_string(file).unwrap(),
+        true  => fs::read_to_string(file).unwrap(),
         false => {
             notify_error(
                 format!("No Config in {}", file).as_str()
@@ -163,20 +192,25 @@ pub fn check_config_file(file: &str) -> String {
 }
 
 
-pub fn check_config_content(string: String) -> Result<PreConfig, toml::de::Error> {
-    let result: Result<PreConfig, _>  = toml::from_str(&string);
+pub fn check_config_content(config_data_string: String, section: String) -> PreConfig {
+    let result: Result<PreConfig, _>  = toml::from_str(&config_data_string);
 
     match result.clone() {
-        Ok(_) => result,
-        Err(e) => Err(e)
+        Ok(_) => result.unwrap(),
+        Err(e) => {
+            notify_error(
+                format!("Config Error: missing or wrong parameter in section: monitors.{}", section).as_str()
+            );
+            exit(0x0100);
+        }
     }
 }
 
 
-pub fn get_table(section: &str, config_path: &str) -> toml::value::Value{
+pub fn get_table(section: &str, config_path: &str) -> toml::value::Value {
     let config_raw_data: String = check_config_file(config_path);
     let full_table: toml::Table;
-    match  toml::from_str::<toml::Table>(&config_raw_data).is_ok() {
+    match toml::from_str::<toml::Table>(&config_raw_data).is_ok() {
         true => {
             full_table = toml::from_str(&config_raw_data).unwrap()
         }
@@ -187,14 +221,13 @@ pub fn get_table(section: &str, config_path: &str) -> toml::value::Value{
     }
 
     let table: toml::Value;
-    match full_table.get(section){
-        Some(_) =>  table = full_table[section].clone(),
+    match full_table.get(section) {
+        Some(_) => table = full_table[section].clone(),
         None => {
             notify_error(
                 format!("Config Error: No section \"{}\" in {}", section, CONFIG_FILE.as_str()).as_str()
             );
             exit(0x0100)
-
         }
     };
 
@@ -204,18 +237,20 @@ pub fn get_table(section: &str, config_path: &str) -> toml::value::Value{
 
 pub fn config_data(config_path: String) -> Config {
     let table = get_table("monitors", config_path.as_str());
-    let mut section_data_string: String = "".to_string();
+    let mut section_data_as_string = "".to_string();
     let mut section = Monitor::get_active().unwrap().id.to_string();
-
+    let mut use_section_any = false;
+    
     match table.get(section.clone()) {
         Some(_) => {
-            section_data_string = toml::to_string(&table[&section]).unwrap();
+            section_data_as_string = toml::to_string(&table[&section]).unwrap();
         },
         None => {
             match table.get("any".to_string()){
                 Some(_) => {
+                    use_section_any = true;
                     section = "any".to_string();
-                    section_data_string = toml::to_string(&table[&"any".to_string()]).unwrap()
+                    section_data_as_string = toml::to_string(&table[&"any".to_string()]).unwrap()
                 },
                 None => {
                     notify_error("Config Error: no section \"[monitors.any]\"");
@@ -224,44 +259,48 @@ pub fn config_data(config_path: String) -> Config {
             }
         }
     }
-
-    if let  Err(_) = check_config_content(section_data_string.clone()) {
-        notify_error(
-            format!("Config Error: missing parameter in section: monitors.{}", section).as_str()
+    
+    let mut pre_config: PreConfig = check_config_content(section_data_as_string, section.to_string());
+    
+    if use_section_any == false {
+        let section_any_pre_config: PreConfig = check_config_content(
+            toml::to_string(&table[&"any".to_string()]).unwrap(),
+            "any".to_string()
         );
-        exit(0x0100);
+        
+        pre_config.replace_none_values(&section_any_pre_config);
     }
 
-    let pre_config: PreConfig = check_config_content(section_data_string).unwrap();
+
     let mut axis_map: HashMap<String, ConfigAxisData> = HashMap::new();
 
     axis_map.insert(
         "x".to_string(),
         ConfigAxisData {
-            padding_min: pre_config.padding.3,
-            padding_max: pre_config.padding.2,
-            default_size: pre_config.default_size.0 as i16,
-            margin: pre_config.margin.0 as i16
+            padding_min: pre_config.padding.unwrap().3,
+            padding_max: pre_config.padding.unwrap().2,
+            default_size: pre_config.default_size.unwrap().0 as i16,
+            margin: pre_config.margin.unwrap().0 as i16
         }
     );
 
     axis_map.insert(
         "y".to_string(),
         ConfigAxisData {
-            padding_min: pre_config.padding.0,
-            padding_max: pre_config.padding.2,
-            default_size: pre_config.default_size.1 as i16,
-            margin: pre_config.margin.1 as i16
+            padding_min: pre_config.padding.unwrap().0,
+            padding_max: pre_config.padding.unwrap().2,
+            default_size: pre_config.default_size.unwrap().1 as i16,
+            margin: pre_config.margin.unwrap().1 as i16
         }
     );
 
     let config = Config {
         axis_data: axis_map,
-        detect_padding: pre_config.detect_padding,
-        standard_resize: pre_config.standard_resize,
-        stick_to_borders: pre_config.stick_to_borders,
-        invert_resize_in_stick_mode: pre_config.invert_resize_in_stick_mode,
-        resize_through_borders: pre_config.resize_through_borders,
+        detect_padding: pre_config.detect_padding.unwrap(),
+        standard_resize: pre_config.standard_resize.unwrap(),
+        stick_to_borders: pre_config.stick_to_borders.unwrap(),
+        invert_resize_in_stick_mode: pre_config.invert_resize_in_stick_mode.unwrap(),
+        resize_through_borders: pre_config.resize_through_borders.unwrap(),
     };
 
     config
@@ -291,7 +330,7 @@ pub fn client_data() -> FromClient {
         "y".to_string(),
         ClientAxisData {
             window_pos: get_parameter("y", POSITION_PARAMETERS.clone(), active_window.at.1),
-            window_size:  get_parameter("y", SIZE_PARAMETERS.clone(), active_window.size.1),
+            window_size: get_parameter("y", SIZE_PARAMETERS.clone(), active_window.size.1),
             monitor_min_point: active_monitor.y as i16,
             monitor_max_point: active_monitor.y as i16 + active_monitor.height as i16,
             cursor_pos: cursor_position.y as i16
