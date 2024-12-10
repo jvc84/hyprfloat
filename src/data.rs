@@ -22,12 +22,12 @@ use hyprland::{
 use crate::{
     get_parameter,
     notify_error,
-    POSITION_PARAMETERS,
+    AT_PARAMETERS,
     SIZE_PARAMETERS,
 };
 
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct ConfigAxisData {
     pub padding_min: i16,
     pub padding_max: i16,
@@ -52,6 +52,16 @@ pub struct ClientAxisData {
 }
 
 #[derive(Deserialize, Clone)]
+pub struct FromClient {
+    pub axis_data: HashMap<String, ClientAxisData>,
+    pub address: Address,
+    pub class: String,
+    pub monitor: String,
+    pub floating: bool,
+    pub fullscreen: bool,
+}
+
+#[derive(Deserialize, Clone, Debug)]
 pub struct Config {
     pub axis_data:  HashMap<String, ConfigAxisData>,
     pub detect_padding: bool,
@@ -61,15 +71,6 @@ pub struct Config {
     pub resize_through_borders: bool,
 }
 
-#[derive(Deserialize, Clone)]
-pub struct FromClient {
-    pub axis_data: HashMap<String, ClientAxisData>,
-    pub address: Address,
-    pub class: String,
-    pub monitor: String,
-    pub floating: bool,
-    pub fullscreen: bool,
-}
 
 #[derive(Deserialize, Clone)]
 pub struct PreConfig {
@@ -112,21 +113,64 @@ impl PreConfig {
     }
 }
 
+trait MyTrait {
+    fn check_parameter(self, parameter: &str) -> Self;
+}
+
+impl<T> MyTrait for Option<T> {
+    fn check_parameter(self, parameter: &str) -> Self {
+        match self {
+            Some(x) => Some(x),
+            None => {
+                notify_error(format!(
+                    "Config Error: missing parameter '{}'. Subsection{}",
+                    parameter,
+                    SUBSECTION_INFO.read().unwrap()
+                ));
+                
+                exit(0x0100)
+            }
+        }
+    }
+}
 
 lazy_static!(
     static ref HOME: PathBuf = home_dir().unwrap();
-    pub static ref XDG_PATH: String = "/.config/hyprfloat/hf.toml".to_string();
-    pub static ref CONFIG_FILE: String = format!("{}{}", HOME.to_str().unwrap(), XDG_PATH.as_str());
-
-    pub static ref CONFIG_DATA: Arc<RwLock<Config>> = Arc::new(RwLock::new(config_data(CONFIG_FILE.clone())));
-    pub static ref CLIENT_DATA:  Arc<RwLock<FromClient>> = Arc::new(RwLock::new(client_data()));
+    pub static ref CACHE_DIR: String = format!("{}{}", HOME.to_str().unwrap(), "/.cache/hyprfloat/");
+    pub static ref CLASSES_CACHE_FLIE: String = "classes.toml".to_string();
+    pub static ref CACHE_FILE: String =  format!("{}{}", CACHE_DIR.clone(), CLASSES_CACHE_FLIE.clone()); 
+    pub static ref CONFIG_PATH: String = "/.config/hyprfloat/hf.toml".to_string();
+    pub static ref CONFIG_FILE: String = format!("{}{}", HOME.to_str().unwrap(), CONFIG_PATH.as_str());
+    
+    pub static ref CONFIG_DATA: Arc<RwLock<Config>> = Arc::new(RwLock::new(
+         Config {
+            axis_data: HashMap::new(),
+            detect_padding: false,
+            standard_resize: false,
+            stick_to_borders: false,
+            invert_resize_in_stick_mode: false,
+            resize_through_borders: false,
+        }
+    ));
+    pub static ref CLIENT_DATA: Arc<RwLock<FromClient>> = Arc::new(RwLock::new(
+        FromClient {
+            axis_data: HashMap::new(),
+            address: Address::new(""),
+            class: String::from(""),
+            monitor: String::from(""),
+            floating: false,
+            fullscreen: false,
+        }
+    ));
     pub static ref COUNT_DATA: Arc<RwLock<HashMap<String, CountAxisData>>> = {
        Arc::new(RwLock::new(
-            count_data(
-                CLIENT_DATA.read().unwrap().clone()
-            )
+           HashMap::new()
        ))
     };
+
+    pub static ref SUBSECTION_INFO: Arc<RwLock<String>> = Arc::new(RwLock::new(
+        String::new()
+    ));
 );
 
 
@@ -174,7 +218,7 @@ pub fn empty_client() -> Client {
 pub fn update_data() {
     *CLIENT_DATA.write().unwrap() = client_data();
     *COUNT_DATA.write().unwrap() = count_data(
-        client_data()
+        CLIENT_DATA.read().unwrap().clone()
     );
 }
 
@@ -183,39 +227,24 @@ pub fn check_config_file(file: &str) -> String {
     match fs::read_to_string(file).is_ok() {
         true  => fs::read_to_string(file).unwrap(),
         false => {
-            notify_error(
-                format!("No Config in {}", file).as_str()
-            );
+            notify_error(format!(
+                "No Config in {}", file
+            ));
             exit(0x0100)
         }
     }
 }
 
 
-pub fn check_config_content(config_data_string: String, section: String) -> PreConfig {
-    let result: Result<PreConfig, _>  = toml::from_str(&config_data_string);
-
-    match result.clone() {
-        Ok(_) => result.unwrap(),
-        Err(e) => {
-            notify_error(
-                format!("Config Error: missing or wrong parameter in section: monitors.{}", section).as_str()
-            );
-            exit(0x0100);
-        }
-    }
-}
-
-
 pub fn get_table(section: &str, config_path: &str) -> toml::value::Value {
-    let config_raw_data: String = check_config_file(config_path);
+    let config_data_as_string: String = check_config_file(config_path);
     let full_table: toml::Table;
-    match toml::from_str::<toml::Table>(&config_raw_data).is_ok() {
+    match toml::from_str::<toml::Table>(&config_data_as_string).is_ok() {
         true => {
-            full_table = toml::from_str(&config_raw_data).unwrap()
+            full_table = toml::from_str(&config_data_as_string).unwrap()
         }
         false => {
-            notify_error("Config Error: Wrong parameter value");
+            notify_error("Config Error: Fatal config error".to_string());
             exit(0x0100)
         }
     }
@@ -224,9 +253,11 @@ pub fn get_table(section: &str, config_path: &str) -> toml::value::Value {
     match full_table.get(section) {
         Some(_) => table = full_table[section].clone(),
         None => {
-            notify_error(
-                format!("Config Error: No section \"{}\" in {}", section, CONFIG_FILE.as_str()).as_str()
-            );
+            notify_error(format!(
+                "Config Error: No section \"{}\" in {}",
+                section,
+                CONFIG_FILE.as_str()
+                ));
             exit(0x0100)
         }
     };
@@ -235,72 +266,106 @@ pub fn get_table(section: &str, config_path: &str) -> toml::value::Value {
 }
 
 
-pub fn config_data(config_path: String) -> Config {
-    let table = get_table("monitors", config_path.as_str());
-    let mut section_data_as_string = "".to_string();
-    let mut section = Monitor::get_active().unwrap().id.to_string();
-    let mut use_section_any = false;
-    
-    match table.get(section.clone()) {
-        Some(_) => {
-            section_data_as_string = toml::to_string(&table[&section]).unwrap();
-        },
-        None => {
-            match table.get("any".to_string()){
-                Some(_) => {
-                    use_section_any = true;
-                    section = "any".to_string();
-                    section_data_as_string = toml::to_string(&table[&"any".to_string()]).unwrap()
-                },
-                None => {
-                    notify_error("Config Error: no section \"[monitors.any]\"");
-                    exit(0x0100)
-                }
-            }
+fn check_any(table: toml::Value) -> bool {
+    match table.get("any".to_string()) {
+        Some(_) => true,
+        None => false
+    }
+}
+
+
+pub fn check_config_content(config_data_string: String, subsection: String) -> PreConfig {
+    let result: Result<PreConfig, _>  = toml::from_str(&config_data_string);
+
+    match result.clone() {
+        Ok(_) => result.unwrap(),
+        Err(_) => {
+            notify_error(format!(
+                "Config Error: Wrong parameter value in subsection 'monitors.{}'", subsection
+            ));
+            exit(0x0100);
         }
     }
-    
-    let mut pre_config: PreConfig = check_config_content(section_data_as_string, section.to_string());
-    
-    if use_section_any == false {
-        let section_any_pre_config: PreConfig = check_config_content(
-            toml::to_string(&table[&"any".to_string()]).unwrap(),
+}
+
+
+pub fn config_data(config_path: String) -> Config {
+    let table = get_table("monitors", config_path.as_str());
+    let mut subsection = Monitor::get_active().unwrap().id.to_string();
+
+
+    if table.get(subsection.clone()).is_none() {
+        if check_any(table.clone()) == true {
+            subsection = String::from("any");
+        } else {
+            notify_error(format!(
+                "Config Error: no subsection '[monitors.any]' or '[monitors.{}]''",
+                subsection
+            ));
+            exit(0x0100)
+        }
+    }
+
+    let mut pre_config: PreConfig = check_config_content(
+        toml::to_string(&table[&subsection]).unwrap(),
+        subsection.clone()
+    );
+
+    let mut subsection_info = format!(
+        " '[monitors.{}]'",
+        subsection.clone()
+    );
+
+    if subsection.clone() != "any".to_string() && check_any(table.clone()) == true {
+        let section_any_pre_config = check_config_content(
+            toml::to_string(&table[&"any"]).unwrap(),
             "any".to_string()
         );
-        
         pre_config.replace_none_values(&section_any_pre_config);
+        subsection_info = String::from(
+            format!(
+                "s{} and '[monitors.any]'",
+                subsection_info.clone()
+            )
+        );
     }
+
+    *SUBSECTION_INFO.write().unwrap() = subsection_info.clone();
 
 
     let mut axis_map: HashMap<String, ConfigAxisData> = HashMap::new();
-
+    let padding = pre_config.padding.check_parameter("padding").unwrap();
+    let default_size = pre_config.default_size.check_parameter("default_size").unwrap();
+    let margin = pre_config.margin.check_parameter("default_size").unwrap();
+    
+    
     axis_map.insert(
         "x".to_string(),
         ConfigAxisData {
-            padding_min: pre_config.padding.unwrap().3,
-            padding_max: pre_config.padding.unwrap().2,
-            default_size: pre_config.default_size.unwrap().0 as i16,
-            margin: pre_config.margin.unwrap().0 as i16
+            padding_min: padding.3,
+            padding_max: padding.1,
+            default_size: default_size.0 as i16,
+            margin: margin.0 as i16
         }
     );
 
     axis_map.insert(
         "y".to_string(),
         ConfigAxisData {
-            padding_min: pre_config.padding.unwrap().0,
-            padding_max: pre_config.padding.unwrap().2,
-            default_size: pre_config.default_size.unwrap().1 as i16,
-            margin: pre_config.margin.unwrap().1 as i16
+            padding_min: padding.0,
+            padding_max: padding.2,
+            default_size: default_size.1 as i16,
+            margin: margin.1 as i16
         }
     );
 
     let config = Config {
         axis_data: axis_map,
-        detect_padding: pre_config.detect_padding.unwrap(),
-        standard_resize: pre_config.standard_resize.unwrap(),
-        stick_to_borders: pre_config.stick_to_borders.unwrap(),
-        invert_resize_in_stick_mode: pre_config.invert_resize_in_stick_mode.unwrap(),
-        resize_through_borders: pre_config.resize_through_borders.unwrap(),
+        detect_padding: pre_config.detect_padding.check_parameter("detect_padding").unwrap(),
+        standard_resize: pre_config.standard_resize.check_parameter("standard_resize").unwrap(),
+        stick_to_borders: pre_config.stick_to_borders.check_parameter("stick_to_borders").unwrap(),
+        invert_resize_in_stick_mode: pre_config.invert_resize_in_stick_mode.check_parameter("invert_resize_in_stick_mode").unwrap(),
+        resize_through_borders: pre_config.resize_through_borders.check_parameter("resize_through_borders").unwrap(),
     };
 
     config
@@ -319,7 +384,7 @@ pub fn client_data() -> FromClient {
     axis_map.insert(
         "x".to_string(),
         ClientAxisData {
-            window_pos: get_parameter("x", POSITION_PARAMETERS.clone(), active_window.at.0),
+            window_pos: get_parameter("x", AT_PARAMETERS.clone(), active_window.at.0),
             window_size:  get_parameter("x", SIZE_PARAMETERS.clone(), active_window.size.0),
             monitor_min_point: active_monitor.x as i16,
             monitor_max_point: active_monitor.x as i16 + active_monitor.width as i16,
@@ -329,7 +394,7 @@ pub fn client_data() -> FromClient {
     axis_map.insert(
         "y".to_string(),
         ClientAxisData {
-            window_pos: get_parameter("y", POSITION_PARAMETERS.clone(), active_window.at.1),
+            window_pos: get_parameter("y", AT_PARAMETERS.clone(), active_window.at.1),
             window_size: get_parameter("y", SIZE_PARAMETERS.clone(), active_window.size.1),
             monitor_min_point: active_monitor.y as i16,
             monitor_max_point: active_monitor.y as i16 + active_monitor.height as i16,
