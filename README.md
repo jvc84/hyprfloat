@@ -123,7 +123,7 @@ Default config path: `$HOME/.config/hyprfloat/hf.toml`
   <summary>hfopen</summary>
 
 # hfopen
-```md
+```
 Usage: hfopen [OPTIONS] <EXECUTABLE>
 
 Arguments:
@@ -149,7 +149,7 @@ Options:
 
 # hftogglefloating
 
-```md
+```
 Usage: hftogglefloating [OPTIONS]
 
 Options:
@@ -169,7 +169,7 @@ Options:
   <summary>hfresizeactive</summary>
 # hfresizeactive
 
-```md
+```
 Usage: hfresizeactive [OPTIONS] <RESIZE_X> <RESIZE_Y>
 
 Arguments:
@@ -191,7 +191,7 @@ Options:
 
 # hfmovewindow
 
-```md
+```
 Usage: hfmovewindow [OPTIONS] [DIRECTION]
 
 Arguments:
