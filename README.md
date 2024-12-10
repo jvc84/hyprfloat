@@ -5,15 +5,15 @@
     <img src="https://cyber.dabamos.de/88x31/blink-0.gif" width="88" height="31"/> 
   </h1>
 </div>
-  
+
 <h2> Improve your experience with floating windows! </h2>
 
 Supports `Hyprland >= 42.0`
 
-Hyprfloat is a project, presented by 4 console apps based on common library: `hfopen`, `hftogglefloating`, `hfresizeactive`, `hfmovewindow`. 
+Hyprfloat is a project, presented by 4 console apps based on common library: `hfopen`, `hftogglefloating`, `hfresizeactive`, `hfmovewindow`.
 This project is designed to simplify control of floating windows in Hyprland with keyboard and customize their behaviour using config and console arguments
 
-# Demonstration 
+# Demonstration
 
 
 <details> 
@@ -29,15 +29,15 @@ https://github.com/user-attachments/assets/df9a8e61-21b2-4da5-9ee4-b65b056d487f
 
 ## `hyprland.conf`:
 ```
-bind = Super Shift, Return, exec, hfopen -o -s 600x450 -p cursor kitty
-bind = Super Shift, R, exec, hfopen -o -s 700x650 -p center "kitty ranger"
+bind = Super Shift, Return, exec, hfopen -s 600x450 -p cursor kitty
+bind = Super Shift, R, exec, hfopen -s 700x650 -p center "kitty ranger"
 bind = Super Shift, F, exec, hfopen -d -p cursor firefox
 ```
 </details>
 
 <details> 
   <summary>hftogglefloating</summary>
-  
+
 # hftogglefloating
 
 
@@ -55,13 +55,8 @@ bind = Super, Space, exec, hftogglefloating -d -p cursor
 
 <details> 
   <summary>hfresizeactive</summary>
-  
+
 # hfresizeactive
-
-
-
-https://github.com/user-attachments/assets/554d927b-b9d3-4c7a-bb47-773bae5ae722
-
 
 
 ## `hyprland.conf`:
@@ -76,7 +71,7 @@ bind = Super Alt, Right, exec, hfresizeactive   100   0
 
 <details> 
   <summary>hfmovewindow</summary>
-  
+
 # hfmovewindow
 
 
@@ -99,14 +94,15 @@ bind = Super Shift, Z, exec, hfmovewindow -p far
 ```
 </details>
 
-# Requirements 
+# Requirements
 
 ```
 rust/rustup
 sudo
 ```
 
-# Installation 
+
+# Installation
 
 
 ```bash
@@ -126,92 +122,67 @@ Default config path: `$HOME/.config/hyprfloat/hf.toml`
 <details> 
   <summary>hfopen</summary>
 
-# hfopen 
+# hfopen
+```bash
+Usage: hfopen [OPTIONS] <EXECUTABLE>
 
-  USAGE:    `hfopen [ARGUMENTS] "EXECUTABLE"`
+Arguments:
+<EXECUTABLE>  Program to run (Example: "nautilus --new-window")
 
-ARGUMENTS:
+Options:
+-f, --force                   Do not detect padding, even if 'detect_padding' option in config equals 'true'
+-d, --default-size            Resize window according to config parameter 'default_size'
+-o, --origin-size             Open small window and then resize it
+-t, --tiled                   Open window floating, then tile
+-s, --size <SIZE_X> <SIZE_Y>  Set window size by x-axis to <SIZE_X>, by y-axis to <SIZE_Y>
+-a, --at <AT_X> <AT_Y>        Set window open position by x-axis to <POS_X>, by y-axis to <POS_Y>
+-p, --position <POSITION>     Open window according to <POSITION> value [possible values: l, left, r, right, t, top, b, bottom, tl, top-left, tr, top-right, bl, bottom-left, br, bottom-right, cursor, center, random, far, close, opposite, any]
+-c, --config <CONFIG>         Path to config file [default: /home/adex/.config/hyprfloat/hf.toml]
+-h, --help                    Print help
+-V, --version                 Print version
 ```
-    -t, --tiled                 - open window tiled
-    -o, --origin-size           - let program open window with specific size and then resize it.
-        Recommended when size is predefined via config or console arguments
-    -d, --default-size          - resize window according to config parameter `default_size`
-    -c, --config PATH           - define PATH for config
-    -s, --size SIZE_XxSIZE_Y    - set window size by x axis to SIZE_X, by y axis to SIZE_Y
-    -m, --move POS_XxPOS_Y      - set window open position by x axis to POS_X, by y axis to POS_Y
-    -p, --position PARAMETER    - open window according to PARAMETER
-        PARAMETERS:
-            l, left              to the left center position
-            r, right             to the right center position
-            t, top               to the top center position
-            b, bottom            to the bottom center position
-            tl, top-left         to the top-left corner
-            tr, top-right        to the top-right corner
-            bl, bottom-left      to the bottom-left corner
-            br, bottom-right     to the bottom-right corner
-            cursor               to the cursor position
-            center               to the center
-            close                to the closest corner from cursor
-            far                  to the farthest corner from cursor
-            opposite             to the mirror of cursor position
-            random               to the random position on screen
-```
-  
+
 </details>
-
-
 
 <details> 
   <summary>hftogglefloating</summary>
 
 # hftogglefloating
 
-  USAGE:    `hftogglefloating [ARGUMENTS]`
+```bash
+Usage: hftogglefloating [OPTIONS]
 
-ARGUMENTS:
+Options:
+  -f, --force                   Do not detect padding, even if 'detect_padding' option in config equals 'true'
+  -d, --default-size            Resize window according to config parameter 'default_size'
+  -s, --size <SIZE_X> <SIZE_Y>  Set window size by x axis to <SIZE_X>, by y axis to <SIZE_Y>
+  -a, --at <AT_X> <AT_Y>        Set window open position by x axis to <POS_X>, by y axis to <POS_Y>
+  -p, --position <POSITION>     Open window according to <POSITION> value [possible values: l, left, r, right, t, top, b, bottom, tl, top-left, tr, top-right, bl, bottom-left, br, bottom-right, cursor, center, random, far, close, opposite, any]
+  -c, --config <CONFIG>         Path to config file [default: /home/adex/.config/hyprfloat/hf.toml]
+  -h, --help                    Print help
+  -V, --version                 Print version
+                                                
 ```
-    -d, --default-size          - resize window according to config parameter `default_size`
-    -c, --config PATH           - define PATH for config
-    -s, --size SIZE_XxSIZE_Y    - set window size by x axis to SIZE_X, by y axis to SIZE_Y
-    -m, --move POS_XxPOS_Y      - set window move position by x axis to POS_X, by y axis to POS_Y
-    -p, --position PARAMETER    - move window according to PARAMETER
-        PARAMETERS:
-            l, left              to the left center position
-            r, right             to the right center position
-            t, top               to the top center position
-            b, bottom            to the bottom center position
-            tl, top-left         to the top-left corner
-            tr, top-right        to the top-right corner
-            bl, bottom-left      to the bottom-left corner
-            br, bottom-right     to the bottom-right corner
-            cursor               to the cursor position
-            center               to the center
-            close                to the closest corner from cursor
-            far                  to the farthest corner from cursor
-            opposite             to the mirror of cursor position
-            random               to the random position on screen
-```
-  
 </details>
-
 
 <details> 
   <summary>hfresizeactive</summary>
-  
 # hfresizeactive
 
-USAGE:    `hfresizeactive [ARGUMENTS] RESIZE_X RESIZE_Y`
+```bash
+Usage: hfresizeactive [OPTIONS] <RESIZE_X> <RESIZE_Y>
 
-ARGUMENTS:
-```
-    -c, --config PATH    - define PATH for config
-    -e, --exact          - make size of floating window exactly RESIZE_X pixels on x axis, RESIZE_Y pixels on y axis
-    -f, --force          - do not detect padding, even if `detect_padding` option in config equals `true`
-    -n, --no-invert      - do not invert resize in stick mode, even if `invert_resize_in_stick_mode` option in config equals `true`
-```
-```
-RESIZE_X       - resize window by x axis on RESIZE_X pixels according to config parameters
-RESIZE_Y       - resize window by y axis on RESIZE_Y pixels according to config parameters
+Arguments:
+  <RESIZE_X>  resize window by x-axis on <RESIZE_X> pixels according to config parameters
+  <RESIZE_Y>  resize window by y-axis on <RESIZE_Y> pixels according to config parameters
+
+Options:
+  -f, --force            Do not detect padding, even if 'detect_padding' option in config equals 'true'
+  -n, --no-invert        Do not invert resize in stick mode, even if 'invert_resize_in_stick_mode' option in config equals 'true'
+  -e, --exact            Set size of floating window exactly <RESIZE_X> pixels on x-axis, <RESIZE_Y> pixels on y-axis
+  -c, --config <CONFIG>  Path to config file [default: /home/adex/.config/hyprfloat/hf.toml]
+  -h, --help             Print help
+  -V, --version          Print version
 ```
 </details>
 
@@ -220,37 +191,18 @@ RESIZE_Y       - resize window by y axis on RESIZE_Y pixels according to config 
 
 # hfmovewindow
 
-  USAGE:    `hfmovewindow [ARGUMENTS] [DIRECTION]`
+```bash
+Usage: hfmovewindow [OPTIONS] [DIRECTION]
 
-ARGUMENTS:
-```
-    -c, --config PATH           - define PATH for config
-    -p, --position PARAMETER    - move window according to PARAMETER
-        PARAMETERS:
-            l, left              to the left center position
-            r, right             to the right center position
-            t, top               to the top center position
-            b, bottom            to the bottom center position
-            tl, top-left         to the top-left corner
-            tr, top-right        to the top-right corner
-            bl, bottom-left      to the bottom-left corner
-            br, bottom-right     to the bottom-right corner
-            cursor               to the cursor position
-            center               to the center
-            close                to the closest corner from cursor
-            far                  to the farthest corner from cursor
-            opposite             to the mirror of cursor position
-            random               to the random position on screen
-```
+Arguments:
+  [DIRECTION]  Direction to move window to [possible values: l, r, u, d]
 
-DIRECTIONS:
-```
-    l        - move window left according to config parameters
-    r        - move window right according to config parameters
-    u        - move window up according to config parameters
-    d        - move window down according to config parameters
-```
+Options:
+  -f, --force                Do not detect padding, even if 'detect_padding' option in config equals 'true'
+  -p, --position <POSITION>  Open window according to <POSITION> value [possible values: l, left, r, right, t, top, b, bottom, tl, top-left, tr, top-right, bl, bottom-left, br, bottom-right, cursor, center, random, far, close, opposite, any]
+  -c, --config <CONFIG>      Path to config file [default: /home/adex/.config/hyprfloat/hf.toml]
+  -h, --help                 Print help
+  -V, --version              Print version
+ ```
 
 </details>
-
-
