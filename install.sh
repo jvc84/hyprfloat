@@ -26,7 +26,7 @@ function copy_config() {
   if [ -z "$( find "$config_dir" -name "hf.toml" )" ]; then
     cp "$DIR/example/hf.toml" "$config_dir" || exit_message "Config was not copied!"
 
-    notify "File hf.toml copied to $config_dir"
+    notify "File hf.toml was copied to $config_dir"
   fi
 }
 
@@ -35,7 +35,7 @@ function copy_binaries() {
   
   sudo cp ./{hfmovewindow,hfopen,hfresizeactive,hftogglefloating} /usr/bin || exit_message "Binaries was not copied!"
   
-  notify "Binaries: hfmovewindow, hfopen, hfresizeactive, hftogglefloating copied to /usr/bin"
+  notify "Binaries: hfmovewindow, hfopen, hfresizeactive, hftogglefloating was copied to /usr/bin"
 }
 
 

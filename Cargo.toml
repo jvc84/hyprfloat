@@ -1,5 +1,3 @@
-#![ allow( dead_code, unused_imports ) ]
-
 [package]
 name = "hyprfloat"
 version = "0.1.0"
@@ -8,11 +6,6 @@ edition = "2021"
 [lib]
 name = "hyprfloat"
 path = "src/lib.rs"
-
-[lib.data]
-mane = "data"
-path= "src/data.rs"
-
 
 [[bin]]
 name = "hfmovewindow"
@@ -32,18 +25,17 @@ path = "src/bin/hftogglefloating.rs"
 
 
 [dependencies]
-fork = "0.2.0"
+clap = { version = "4.5", features = ["derive"] }
 hyprland = { git = "https://github.com/hyprland-community/hyprland-rs", branch = "master" }
 toml = "0.8"
 serde = "1.0"
 directories = "5.0"
-rand = "0.9.0-alpha.2"
+rand = "0.9.0-alpha.0"
 lazy_static = "1.5"
 simple-home-dir = "0.4"
 
 
 [profile.release]
-target_os = "linux"
 opt-level = 3
 lto = true
 codegen-units = 16

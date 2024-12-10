@@ -1,5 +1,4 @@
 use std::{
-    env,
     process::exit
 };
 use hyprland::dispatch::{
@@ -11,17 +10,35 @@ use hyprland::dispatch::{
     Position::Exact,
 };
 use hyprfloat::{
-    XDG_PATH,
+    notify_error,
+    window_position,
+    config_data,
+    update_data,
+    CONFIG_FILE,
     CLIENT_DATA,
     CONFIG_DATA,
     COUNT_DATA,
     PARAMETERS,
-    notify_error,
-    window_position,
-    config_data,
-    position_help,
-    common_help
+    POSITION_VALUES,
 };
+use clap::Parser;
+
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None, ignore_errors = false)]
+struct Args {
+    /// Do not detect padding, even if 'detect_padding' option in config equals 'true'
+    #[arg(short, long, default_value_t = false)]
+    force: bool,
+    /// Direction to move window to
+    #[arg(default_value_t = String::from("l"), hide_default_value = true, value_parser = ["l", "r", "u", "d"])]
+    direction: String,
+    /// Open window according to <POSITION> value
+    #[arg(short, long, default_value_t = String::from("any"), hide_default_value = true, value_parser = POSITION_VALUES.clone())]
+    position: String,
+    /// Path to config file
+    #[arg(short, long, default_value_t = CONFIG_FILE.clone())]
+    config: String,
+}
 
 
 fn position_by_direction(direction: &str, axis: &str) -> i16 {
@@ -33,7 +50,7 @@ fn position_by_direction(direction: &str, axis: &str) -> i16 {
         "x" => ("l", "r"),
         "y" => ("u", "d"),
          _  => {
-            notify_error(format!("No such axis: {axis}").as_str());
+            notify_error(format!("No such axis: {axis}"));
             exit(0x0100)
         }
     };
@@ -51,7 +68,9 @@ fn position_by_direction(direction: &str, axis: &str) -> i16 {
 fn move_window(direction: &str) {
     let dispatcher: DispatchType;
 
-    if CLIENT_DATA.read().unwrap().floating == true && CONFIG_DATA.read().unwrap().detect_padding == true {
+    if CLIENT_DATA.read().unwrap().floating == true &&
+        CONFIG_DATA.read().unwrap().detect_padding == true
+    {
         dispatcher = MoveActive(Exact(
             position_by_direction(direction, "x"),
             position_by_direction(direction, "y"),
@@ -63,7 +82,10 @@ fn move_window(direction: &str) {
             "d" => Down,
             "r" => Right,
              _  => {
-                 notify_error(format!("No such direction:: {}", direction).as_str());
+                 notify_error(format!(
+                     "No such direction:: {}", 
+                     direction
+                 ));
                  exit(0x0100)
              },
         };
@@ -73,67 +95,24 @@ fn move_window(direction: &str) {
 }
 
 
-fn movewindow_help() {
-    println!("\
-    \nUSAGE:\
-    \n\
-    \n    hfmovewindow [ARGUMENTS] [DIRECTION]\
-    \n\
-    \nARGUMENTS:\
-    \n\
-    {}\
-    {}\
-    \n\
-    \nDIRECTIONS:\
-    \n\
-    \n    l        - move window left according to config parameters\
-    \n    r        - move window right according to config parameters\
-    \n    u        - move window up according to config parameters\
-    \n    d        - move window down according to config parameters\
-    \n\
-    \nDEFAULT CONFIG PATH:\
-    \n\
-    \n    `$HOME{}`
-    ",
-             common_help(),
-             position_help("move"),
-             XDG_PATH.as_str()
-    );
-        
-    exit(0x0100);
-}
-
-
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let parsed_args = Args::parse();
 
-    for (i, arg) in args.clone()[1..args.len()].iter().enumerate() {
-        match arg.as_str() {
-            "-h" | "--help"     => movewindow_help(),
-            "-c" | "--config"   => {
-                *CONFIG_DATA.write().unwrap() = config_data(args[i + 2].clone());
-            },
-            "-f" | "--force"    => CONFIG_DATA.write().unwrap().detect_padding = false,
-            "-p" | "--position" => {
-                PARAMETERS.write().unwrap().dispatcher_arg = args[i + 2].clone();
-                PARAMETERS.write().unwrap().count_system = "position".to_string();
-            },
-            _                   => {
-                continue;
-            }
-        }
+    *CONFIG_DATA.write().unwrap() = config_data(parsed_args.config);
+    update_data();
+
+    if parsed_args.force {
+        CONFIG_DATA.write().unwrap().detect_padding = false
     }
 
-    let all_directions: Vec<_> = vec!["l", "r", "u", "d"];
-
+    PARAMETERS.write().unwrap().dispatcher_arg = parsed_args.position.clone();
+    if parsed_args.position != "any".to_string() {
+        PARAMETERS.write().unwrap().count_system = "position".to_string();
+    }
+    
     if PARAMETERS.read().unwrap().dispatcher_arg != "any" {
         let _ = Dispatch::call(window_position());
-    } else if args.len() > 1 && 
-        all_directions.contains(&args.clone()[args.len() - 1].as_str()) {
-        
-        let arg = args.clone()[args.len() - 1].to_string();
-        move_window(arg.as_str());
     } else {
-        movewindow_help()
+        move_window(parsed_args.direction.as_str()); 
     }
 }
