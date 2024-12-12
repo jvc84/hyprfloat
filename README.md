@@ -58,6 +58,7 @@ bind = Super, Space, exec, hftogglefloating -d -p cursor
 
 # hfresizeactive
 
+https://github.com/user-attachments/assets/3d1471b7-59eb-45be-81c7-cb939ed753ba
 
 ## `hyprland.conf`:
 ```
