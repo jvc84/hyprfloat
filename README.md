@@ -13,7 +13,7 @@ Supports `Hyprland >= 42.0`
 Hyprfloat is a project, presented by 4 console apps based on common library: `hfopen`, `hftogglefloating`, `hfresizeactive`, `hfmovewindow`.
 This project is designed to simplify control of floating windows in Hyprland with keyboard and customize their behaviour using config and console arguments
 
-# Demonstration
+# Usage examples
 
 
 <details> 
@@ -29,8 +29,8 @@ https://github.com/user-attachments/assets/df9a8e61-21b2-4da5-9ee4-b65b056d487f
 
 ## `hyprland.conf`:
 ```
-bind = Super Shift, Return, exec, hfopen -s 600x450 -p cursor kitty
-bind = Super Shift, R, exec, hfopen -s 700x650 -p center "kitty ranger"
+bind = Super Shift, Return, exec, hfopen -s 600 450 -p cursor kitty
+bind = Super Shift, R, exec, hfopen -s 700 650 -p center "nautilus --new-window"
 bind = Super Shift, F, exec, hfopen -d -p cursor firefox
 ```
 </details>
