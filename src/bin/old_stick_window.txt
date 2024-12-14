@@ -1,0 +1,149 @@
+
+// fn stick_window(axis: &str, global_resize: i16) -> (i16, i16) {
+//     // update_data();
+//     let cli_data = CLIENT_DATA.read().unwrap().clone();
+//     let cli_axis = cli_data.axis_data.get(axis).unwrap();
+//     let bind_conf = CONFIG_DATA.read().unwrap().clone();
+//     let conf = bind_conf.axis_data.get(axis).unwrap();
+//
+//     // if bind_conf.classic_resize == false {
+//     //     global_resize = global_resize /2
+//     // }
+//
+//     let mut resize  = global_resize;
+//
+//     let border_pos_min = cli_axis.window_pos;
+//     let border_pos_max = cli_axis.window_pos + cli_axis.window_size;
+//
+//     let mut padding_min = cli_axis.monitor_min_point + conf.padding_min;
+//     let mut padding_max = cli_axis.monitor_max_point - conf.padding_max;
+//
+//     let window_size = cli_axis.window_size;
+//     let window_pos = cli_axis.window_pos;
+//
+//     let mut moveme: i16 = 0;
+//
+//     let area  = padding_max - padding_min;
+//
+//     if  cli_data.floating == true && CONFIG_DATA.read().unwrap().detect_padding == true &&
+//         CONFIG_DATA.read().unwrap().invert_keys_in_stick_mode == true && CONFIG_DATA.read().unwrap().resize_through_borders == false &&
+//         CONFIG_DATA.read().unwrap().stick_to_borders == true &&
+//         ((window_pos + window_size >= padding_max) && window_pos > padding_min)  &&
+//         ((window_pos + window_size <= padding_max) && window_pos >= padding_min) {
+//         resize = -global_resize
+//     }
+//     let mut border_pos_min_final = 0;
+//     let mut border_pos_max_final   = 0;
+//
+//     // if bind_conf.classic_resize == true || (
+//     //     (bind_conf.resize_through_borders == false  &&  bind_conf.stick_to_borders == true) &&
+//     //         (border_pos_max >= padding_max || border_pos_min <= padding_min)
+//     // ) {
+//     //     // notify_error("big");
+//          border_pos_min_final = border_pos_min - resize;
+//          border_pos_max_final = border_pos_max + resize;
+//     // } else {
+//     //     // notify_error("small");
+//     //     border_pos_min_final = border_pos_min - resize / 2;
+//     //     border_pos_max_final = border_pos_max + resize / 2;
+//     // }
+//
+//
+//
+//     // let step = (COUNT_DATA.read().unwrap().get("y").unwrap().monitor_resolution as f32 / 1000.0 ) as i16 * 10;
+//     let step = conf.margin;
+//
+//     let window_final_size = border_pos_max_final - border_pos_min;
+//
+//
+//
+//     if -resize > window_size && window_size < area {
+//         resize  = -window_size + 20;
+//     }
+//
+//     if EXACT.read().unwrap().clone() == false && (CONFIG_DATA.read().unwrap().detect_padding == true && CONFIG_DATA.read().unwrap().resize_through_borders == false &&
+//         // ( window_final_size >= padding_max - padding_min ))
+//         (( (border_pos_min_final <= padding_min && border_pos_max_final >= padding_max) ||
+//             (border_pos_min_final <= padding_min && border_pos_max >= padding_max) ||
+//             (border_pos_min <= padding_min && border_pos_max_final >= padding_max)) &&
+//             border_pos_max - border_pos_min < padding_max - padding_min ))
+//     {
+//         if border_pos_max >= padding_max && border_pos_min_final <= padding_min {
+//             resize =  (border_pos_min - padding_min - step);
+//             moveme = -resize;
+//         }else if border_pos_min <= padding_min && border_pos_max_final >= padding_max {
+//             moveme = 0;
+//             resize = padding_max - step  - border_pos_max;
+//         } else if (border_pos_min_final  <= padding_min && border_pos_max_final >= padding_max)
+//             && ( border_pos_min- padding_min == padding_max - border_pos_max)
+//         {
+//             resize = (padding_max - padding_min) - (border_pos_max - border_pos_min) - step;
+//             moveme = resize / -2 ;
+//         } else {
+//             let distance_min = border_pos_min - padding_min;
+//             let distance_max = padding_max - border_pos_max;
+//
+//             if distance_min <= distance_max || window_size >= area {
+//                 // // notify_error("distance min");
+//                 if CONFIG_DATA.read().unwrap().stick_to_borders == true && (border_pos_min <= padding_min ||
+//                     border_pos_min_final <= padding_min) {
+//                     moveme = padding_min - border_pos_min
+//                 } else {
+//                     if CONFIG_DATA.read().unwrap().classic_resize == false {
+//                         moveme = resize / -2
+//                     } else {
+//                         moveme = 0
+//                     }
+//                 }
+//             } else{
+//                 if CONFIG_DATA.read().unwrap().stick_to_borders == true && (border_pos_max >= padding_max ||
+//                     border_pos_max_final >= padding_max) {
+//                     moveme = padding_max - resize - border_pos_max
+//                 } else {
+//                     if CONFIG_DATA.read().unwrap().classic_resize == false {
+//                         moveme = resize / -2
+//                     } else {
+//                         moveme = 0
+//                     }
+//                 }
+//             }
+//         }
+//     } else if CONFIG_DATA.read().unwrap().resize_through_borders == false && CONFIG_DATA.read().unwrap().detect_padding == true {
+//
+//         let distance_min = border_pos_min - padding_min;
+//         let distance_max = padding_max - border_pos_max;
+//
+//         if distance_min <= distance_max || window_size >= area {
+//             // // notify_error("distance min");
+//             if CONFIG_DATA.read().unwrap().stick_to_borders == true && (border_pos_min <= padding_min ||
+//                 border_pos_min_final <= padding_min) {
+//                 moveme = padding_min - border_pos_min
+//             } else {
+//                 if CONFIG_DATA.read().unwrap().classic_resize == false {
+//                     moveme = resize / -2
+//                 } else {
+//                     moveme = 0
+//                 }
+//             }
+//         } else{
+//             if CONFIG_DATA.read().unwrap().stick_to_borders == true && (border_pos_max >= padding_max ||
+//                 border_pos_max_final >= padding_max) {
+//                 moveme = padding_max - resize - border_pos_max
+//             } else {
+//                 if CONFIG_DATA.read().unwrap().classic_resize == false {
+//                     moveme = resize / -2
+//                 } else {
+//                     moveme = 0
+//                 }
+//             }
+//         }
+//     } else {
+//         if CONFIG_DATA.read().unwrap().classic_resize == false {
+//             moveme = resize / -2
+//         } else {
+//             moveme = 0
+//         }
+//     }
+//
+//     (moveme, resize)
+// }
