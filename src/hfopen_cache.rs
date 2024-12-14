@@ -61,30 +61,24 @@ pub fn get_cached_class(bin: &str, file_path: &str) -> String {
             let file_path = dir_path.join(crate::CLASSES_CACHE_FLIE.as_str());
             let file = File::create(file_path.clone()).unwrap();
             file
-        },
+        }
     };
 
     let mut contents = String::new();
     match file.read_to_string(&mut contents) {
-        Ok(x) => file.read_to_string(&mut contents).unwrap(),
+        Ok(_) => file.read_to_string(&mut contents).unwrap(),
         Err(_) => return "".to_string()
     };
     let toml_value: toml::Value = toml::from_str(&contents).unwrap();
 
     let output: String = match toml_value.get(bin) {
         Some(x) => x.as_str().unwrap().to_string(),
-        None => {
-            "".to_string()
-        }
+        None => "".to_string()
     };
 
     match output.as_str() {
-        "null" => {
-            "".to_string()
-        },
-        _ => {
-            output
-        }
+        "null" => "".to_string(),
+        _ => output
     }
 }
 
