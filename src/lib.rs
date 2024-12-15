@@ -1,6 +1,5 @@
 use toml;
 use rand::Rng;
-use serde::Deserialize;
 use lazy_static::lazy_static;
 use std::{
     sync::{Arc, RwLock},
@@ -27,11 +26,10 @@ use hyprland::{
 };
 pub mod data;
 pub use data::*;
-
 pub mod hfopen_cache;
 pub use hfopen_cache::*;
 
-#[derive(Deserialize, Clone)]
+#[derive(Clone)]
 pub struct Parameters {
     pub config_pre_size: bool,
     pub default_size: bool,
@@ -65,10 +63,10 @@ lazy_static! {
     pub static ref AT_PARAMETERS: Arc<RwLock<HashMap<String, i16>>> = Arc::new(RwLock::new(HashMap::new()));
     pub static ref EXACT: Arc<RwLock<bool>> = Arc::new(RwLock::new(false));
     pub static ref POSITION_VALUES: Vec<&'static str> = vec![
-        "l", "left",
-        "r", "right",
-        "t", "top",
-        "b", "bottom",
+         "l", "left",
+         "r", "right",
+         "t", "top",
+         "b", "bottom",
         "tl", "top-left",
         "tr", "top-right",
         "bl", "bottom-left",

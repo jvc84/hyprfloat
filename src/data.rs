@@ -1,6 +1,7 @@
 use simple_home_dir::*;
 use lazy_static::lazy_static;
 use serde::Deserialize;
+use serde;
 use std::sync::{Arc, RwLock};
 use std::path::PathBuf;
 use std::{
