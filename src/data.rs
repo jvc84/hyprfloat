@@ -114,11 +114,11 @@ impl PreConfig {
     }
 }
 
-trait MyTrait {
+trait ConfParametersTrait {
     fn check_parameter(self, parameter: &str) -> Self;
 }
 
-impl<T> MyTrait for Option<T> {
+impl<T> ConfParametersTrait for Option<T> {
     fn check_parameter(self, parameter: &str) -> Self {
         match self {
             Some(x) => Some(x),
@@ -173,15 +173,6 @@ lazy_static!(
         String::new()
     ));
 );
-
-
-pub fn parse_fullscreen(arg:hyprland::data::FullscreenMode) -> bool {
-    if arg == hyprland::data::FullscreenMode::None {
-        false
-    } else {
-        true
-    }
-}
 
 
 pub fn empty_client() -> Client {
@@ -409,7 +400,10 @@ pub fn client_data() -> FromClient {
         monitor: active_window.monitor.to_string(),
         address: active_window.address,
         floating: active_window.floating,
-        fullscreen: parse_fullscreen(active_window.fullscreen),
+        fullscreen: match active_window.fullscreen {
+            hyprland::data::FullscreenMode::None => false,
+            _ => true
+        },
     };
     client
 }

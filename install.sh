@@ -54,4 +54,3 @@ cargo build --release || exit_message "Build Error!"
 
 copy_config
 copy_binaries
-link_config
