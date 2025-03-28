@@ -1,0 +1,15 @@
+- Move structs and globals to separate files
+- Optimize functions (
+    - remove duplicates
+    - Change SIZE_PARAMETERS, AT_PARAMETERS and their infrastructure
+        to structs and more comprehensive methods, such as impl
+    )
+- Parse in daemon not only Config, but 'windows' section as toml table
+    and pass it to other functions by request
+- Make daemon code look prettier
+- Change config parsing to parse integers as strings and if it contains '%',
+    parse it as % from screen width/height (it would not load cpu if it would be parsed in daemon)
+
+
+
+

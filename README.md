@@ -8,11 +8,6 @@
 
 <h2> Improve your experience with floating windows! </h2>
 
-TODO:
- - Clean code
- - Add proper Error handling
-
-
 Supports `Hyprland >= 42.0`
 
 Hyprfloat is a project, presented by 4 console apps based on common library: `hfopen`, `hftogglefloating`, `hfresizeactive`, `hfmovewindow`.

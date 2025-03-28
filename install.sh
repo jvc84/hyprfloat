@@ -34,7 +34,10 @@ function copy_binaries() {
 
   if [ "$(echo "$answer" | awk '{print tolower($0)}')" == "y" ] || [ "$answer" == "" ]; then
     cd "$DIR/target/release/" || exit_message "Cannot enter '$DIR/target/release/'"
-    sudo cp ./{hfmovewindow,hfopen,hfresizeactive,hftogglefloating} /usr/bin || exit_message "Binaries was not copied!"
+    
+    pwd
+
+    sudo cp ./hfuni /usr/bin || exit_message "Binaries was not copied!"
     notify "Binaries: hfmovewindow, hfopen, hfresizeactive, hftogglefloating was copied to /usr/bin"
   fi
 }

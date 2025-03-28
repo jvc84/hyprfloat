@@ -1,0 +1,4 @@
+[b320bc2dc6e308360936ce4396010359b74558bf] core: use cpu-buffer hw cursors on nvidia by default
+
+bad: 
+[5642ed331df56375c55cd8d56a14054af8bdf8f2] core: move parts of the animation system to hyprutils (#8868)

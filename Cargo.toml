@@ -8,30 +8,27 @@ name = "hyprfloat"
 path = "src/lib.rs"
 
 [[bin]]
-name = "hfmovewindow"
-path = "src/bin/hfmovewindow.rs"
+name = "hfuni"
+path = "src/bin/hfuni.rs"
 
-[[bin]]
-name = "hfopen"
-path = "src/bin/hfopen.rs"
 
-[[bin]]
-name = "hfresizeactive"
-path = "src/bin/hfresizeactive.rs"
-
-[[bin]]
-name = "hftogglefloating"
-path = "src/bin/hftogglefloating.rs"
-
+#[toolchain]
+#toolchain = "nightly"
 
 [dependencies]
-clap = { version = "4.5", features = ["derive"] }
-hyprland = { git = "https://github.com/hyprland-community/hyprland-rs", branch = "master" }
+signal-hook = "0.3"
+clap_complete = "4.5"
+clap = { version = "4.5.29", features = ["derive"] }
+#clap = {git = "https://github.com/clap-rs/clap", branch ="master"}
+hyprland = { git = "https://github.com/jvc84/hyprland-rs", branch = "master" }
+#hyprland = { path = "/home/adex/applications/hyprland-rs", branch = "master" }
 toml = "0.8"
 serde = "1.0"
-rand = "0.9.0-alpha.0"
+rand = "0.9"
 lazy_static = "1.5"
 simple-home-dir = "0.4"
+serde_json = "1.0"
+tokio = { version = "1.43", features = ["full"] }
 
 
 [profile.release]
